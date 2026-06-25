@@ -1,0 +1,2860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SliceMatic - Business Analysis & Product requirements Dashboard</title>
+  <!-- Google Fonts: Outfit (headings) and Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Root variables for modern theme customization */
+    :root {
+      --bg-dark: #09090b;
+      --bg-sidebar: #0e0e11;
+      --bg-card: rgba(22, 22, 26, 0.75);
+      --bg-card-hover: rgba(28, 28, 34, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(255, 0, 127, 0.25);
+      
+      --accent-pink: #ff007f;
+      --accent-pink-glow: rgba(255, 0, 127, 0.4);
+      --accent-purple: #9d4edd;
+      --accent-purple-glow: rgba(157, 78, 221, 0.4);
+      
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-error: #ef4444;
+      --color-info: #0ea5e9;
+      
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      
+      --sidebar-width: 280px;
+      --transition-speed: 0.3s;
+    }
+
+    /* Global reset & layout styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      overflow-x: hidden;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    /* Scrollbars customization */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-pink);
+    }
+
+    /* SIDEBAR NAVIGATION */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      margin-bottom: 32px;
+      text-decoration: none;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
+    }
+
+    .brand-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      background: linear-gradient(to right, #ffffff, #f4f4f5, var(--accent-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin: 16px 12px 8px 12px;
+      font-weight: 700;
+    }
+
+    .nav-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all var(--transition-speed) ease;
+      cursor: pointer;
+    }
+
+    .nav-item a:hover {
+      color: var(--text-primary);
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-item.active a {
+      color: var(--text-primary);
+      background: linear-gradient(90deg, rgba(255, 0, 127, 0.15) 0%, rgba(157, 78, 221, 0.05) 100%);
+      border-left: 3px solid var(--accent-pink);
+      padding-left: 9px;
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      stroke: currentColor;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px 12px 0 12px;
+      border-top: 1px solid var(--border-color);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-footer p {
+      margin-bottom: 4px;
+    }
+
+    /* MAIN CONTENT WRAPPER */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      min-height: 100vh;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    /* PAGE / TAB CONTAINERS */
+    .page-section {
+      display: none;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* GLASS CARDS & UTILITIES */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(12px);
+      transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    }
+
+    .card:hover {
+      border-color: var(--border-accent);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title span {
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sub-section-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 24px;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* STATS LAYOUT (As in cover page) */
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin: 32px 0;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, rgba(20, 20, 24, 0.9) 0%, rgba(12, 12, 14, 0.95) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));
+    }
+
+    .stat-number {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 52px;
+      line-height: 1;
+      margin-bottom: 12px;
+      background: linear-gradient(to bottom, #ffffff 40%, var(--accent-pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 10px rgba(255, 0, 127, 0.2));
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .stat-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* GRID CONTROLS & COMPARISONS */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    /* COVER PAGE LAYOUT */
+    .cover-view {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: calc(100vh - 80px);
+      padding: 20px 40px;
+    }
+
+    .cover-header {
+      border-left: 4px solid var(--accent-pink);
+      padding-left: 24px;
+      margin-bottom: 40px;
+    }
+
+    .cover-subtitle {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--accent-pink);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 8px;
+    }
+
+    .cover-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 64px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      letter-spacing: -0.04em;
+    }
+
+    .cover-desc {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 700px;
+    }
+
+    .cover-metadata {
+      margin-top: 48px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 24px;
+      display: flex;
+      gap: 40px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* BADGES & CHIPS */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .badge-primary { background-color: rgba(255, 0, 127, 0.15); color: var(--accent-pink); border: 1px solid rgba(255, 0, 127, 0.2); }
+    .badge-purple { background-color: rgba(157, 78, 221, 0.15); color: var(--accent-purple); border: 1px solid rgba(157, 78, 221, 0.2); }
+    .badge-success { background-color: rgba(16, 185, 129, 0.15); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.2); }
+    .badge-warning { background-color: rgba(245, 158, 11, 0.15); color: var(--color-warning); border: 1px solid rgba(245, 158, 11, 0.2); }
+    .badge-error { background-color: rgba(239, 68, 68, 0.15); color: var(--color-error); border: 1px solid rgba(239, 68, 68, 0.2); }
+    .badge-info { background-color: rgba(14, 165, 233, 0.15); color: var(--color-info); border: 1px solid rgba(14, 165, 233, 0.2); }
+
+    /* DATA TABLES */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: middle;
+    }
+
+    th {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      color: var(--text-primary);
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.01);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    /* PERSONA CARD DESIGN */
+    .persona-card {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .persona-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .persona-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: white;
+    }
+
+    .persona-title {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .persona-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* BULLET LISTS & CUSTOM ITEMS */
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    li {
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+    }
+
+    .custom-list {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .custom-list li {
+      position: relative;
+      padding-left: 24px;
+      margin-bottom: 12px;
+    }
+
+    .custom-list li::before {
+      content: "•";
+      position: absolute;
+      left: 8px;
+      color: var(--accent-pink);
+      font-weight: bold;
+      font-size: 18px;
+      line-height: 1;
+      top: 0;
+    }
+
+    /* COMPARISON CARDS Side by Side */
+    .comparison-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 20px 0;
+    }
+
+    .comp-card {
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .comp-card.reference {
+      background-color: rgba(239, 68, 68, 0.02);
+      border-left: 4px solid var(--color-error);
+    }
+
+    .comp-card.corrected {
+      background-color: rgba(16, 185, 129, 0.02);
+      border-left: 4px solid var(--color-success);
+    }
+
+    .comp-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* INTERACTIVE SIMULATOR STYLING */
+    .simulator-container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 32px;
+    }
+
+    .sim-panel-controls {
+      background-color: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: fit-content;
+    }
+
+    .sim-panel-results {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .control-value {
+      font-family: monospace;
+      color: var(--accent-pink);
+      font-weight: bold;
+    }
+
+    .control-input {
+      font-family: 'Inter', monospace;
+      color: var(--accent-pink);
+      font-weight: bold;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 2px 6px;
+      width: 75px;
+      text-align: right;
+      outline: none;
+      font-size: 13px;
+      transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    }
+
+    .control-input:focus {
+      border-color: var(--accent-pink);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 8px var(--accent-pink-glow);
+    }
+
+    /* Hide standard number input spinners for clean look */
+    .control-input::-webkit-outer-spin-button,
+    .control-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .control-input {
+      -moz-appearance: textfield;
+    }
+
+    .sim-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      transition: background 0.15s ease;
+    }
+
+    .sim-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-pink);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-pink-glow);
+      transition: transform 0.1s ease;
+    }
+
+    .sim-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .metric-box {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .metric-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: var(--text-primary);
+    }
+
+    .metric-val.green { color: var(--color-success); }
+    .metric-val.red { color: var(--color-error); }
+
+    .chart-container {
+      background-color: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .bar-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bar-label {
+      width: 180px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 16px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-pink), var(--accent-purple));
+      border-radius: 8px;
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .bar-value {
+      width: 80px;
+      text-align: right;
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    /* MOSCOW MATRIX TAKEAWAYS */
+    .moscow-matrix {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin: 24px 0;
+    }
+
+    .moscow-card {
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .moscow-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .moscow-card.must {
+      background-color: rgba(239, 68, 68, 0.02);
+      border-color: rgba(239, 68, 68, 0.15);
+    }
+    .moscow-card.must::before { background-color: var(--color-error); }
+    .moscow-card.must h3 { color: var(--color-error); }
+
+    .moscow-card.should {
+      background-color: rgba(157, 78, 221, 0.02);
+      border-color: rgba(157, 78, 221, 0.15);
+    }
+    .moscow-card.should::before { background-color: var(--accent-purple); }
+    .moscow-card.should h3 { color: var(--accent-purple); }
+
+    .moscow-card.could {
+      background-color: rgba(14, 165, 233, 0.02);
+      border-color: rgba(14, 165, 233, 0.15);
+    }
+    .moscow-card.could::before { background-color: var(--color-info); }
+    .moscow-card.could h3 { color: var(--color-info); }
+
+    .moscow-card.would {
+      background-color: rgba(113, 113, 122, 0.02);
+      border-color: rgba(113, 113, 122, 0.15);
+    }
+    .moscow-card.would::before { background-color: var(--text-muted); }
+    .moscow-card.would h3 { color: var(--text-muted); }
+
+    .moscow-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .moscow-content {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .moscow-content li {
+      margin-bottom: 6px;
+    }
+
+    /* INCONSISTENCY ACCORDION / HIGHLIGHT */
+    .inconsistency-callout {
+      border: 1px dashed var(--color-error);
+      background-color: rgba(239, 68, 68, 0.03);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px 0;
+    }
+
+    .inconsistency-title {
+      color: var(--color-error);
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* FLOWCHART DIAGRAM */
+    .flow-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin: 24px 0;
+      background-color: rgba(0, 0, 0, 0.2);
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .flow-stage {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .flow-stage-title {
+      width: 140px;
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent-pink);
+    }
+
+    .flow-steps {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .flow-step {
+      background-color: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .flow-step:hover {
+      background-color: rgba(255, 255, 255, 0.06);
+      border-color: var(--accent-pink);
+    }
+
+    .flow-arrow {
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+    }
+
+    /* ACCORDION DETAILS */
+    details {
+      background-color: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+
+    details[open] {
+      border-color: var(--border-accent);
+      background-color: rgba(255, 255, 255, 0.025);
+    }
+
+    summary {
+      padding: 14px 20px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    summary::after {
+      content: "+";
+      font-family: monospace;
+      font-size: 16px;
+      color: var(--text-muted);
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    .details-content {
+      padding: 0 20px 20px 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+    }
+
+    /* MENU VISUALIZER */
+    .menu-visualizer {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-top: 16px;
+    }
+
+    .menu-column {
+      background-color: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .menu-col-header {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-pink);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .menu-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu-item-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .menu-item-name {
+      color: var(--text-primary);
+    }
+
+    .menu-item-price {
+      font-family: monospace;
+      color: var(--accent-purple);
+      font-weight: 600;
+    }
+
+    /* LIGHT THEME OVERRIDES (representing pages 2-14 of deep dive PDF) */
+    body.theme-light {
+      --bg-dark: #f5f5f7;
+      --bg-card: #ffffff;
+      --bg-card-hover: #ffffff;
+      --border-color: rgba(0, 0, 0, 0.08);
+      --border-accent: rgba(255, 0, 127, 0.35);
+      --text-primary: #18181b;
+      --text-secondary: #3f3f46;
+      --text-muted: #71717a;
+    }
+
+    body.theme-light .card {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+    }
+
+    body.theme-light .card:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+      border-color: var(--border-accent);
+    }
+
+    /* Keep the sidebar explicitly styled as dark always */
+    .sidebar {
+      background-color: #0e0e11 !important;
+      border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+      color: #a1a1aa !important;
+    }
+
+    .sidebar .nav-item a {
+      color: #a1a1aa !important;
+    }
+
+    .sidebar .nav-item a:hover {
+      color: #f4f4f5 !important;
+      background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+
+    .sidebar .nav-item.active a {
+      color: #ffffff !important;
+      background: linear-gradient(90deg, rgba(255, 0, 127, 0.15) 0%, rgba(157, 78, 221, 0.05) 100%) !important;
+      border-left: 3px solid var(--accent-pink) !important;
+    }
+
+    /* Light table override styling */
+    body.theme-light th {
+      background-color: #f4f4f5 !important;
+      color: #18181b !important;
+    }
+
+    body.theme-light tr:hover td {
+      background-color: #fafafa !important;
+    }
+
+    /* Light callouts override styling */
+    body.theme-light .inconsistency-callout {
+      background-color: #fff5f5 !important;
+      border: 1px dashed rgba(239, 68, 68, 0.3) !important;
+    }
+
+    body.theme-light .inconsistency-callout .inconsistency-title {
+      color: var(--color-error) !important;
+    }
+
+    body.theme-light .inconsistency-callout p {
+      color: #7f1d1d !important;
+    }
+
+    /* Info notes callout in light theme override */
+    body.theme-light .inconsistency-callout[style*="color-info"],
+    body.theme-light .inconsistency-callout[style*="rgba(14, 165, 233"] {
+      background-color: #f0f9ff !important;
+      border-color: rgba(14, 165, 233, 0.3) !important;
+    }
+
+    body.theme-light .inconsistency-callout[style*="color-info"] .inconsistency-title {
+      color: #0284c7 !important;
+    }
+
+    body.theme-light .inconsistency-callout[style*="color-info"] p {
+      color: #075985 !important;
+    }
+
+    /* Flow diagram in light theme override */
+    body.theme-light .flow-diagram {
+      background-color: #f4f4f5 !important;
+      border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    body.theme-light .flow-step {
+      background-color: #ffffff !important;
+      border-color: rgba(0, 0, 0, 0.08) !important;
+      color: #27272a !important;
+    }
+
+    /* MoSCoW Light Theme Colors overrides */
+    body.theme-light .moscow-card.must { background-color: #fff5f5; border-color: rgba(239, 68, 68, 0.25); }
+    body.theme-light .moscow-card.should { background-color: #faf5ff; border-color: rgba(157, 78, 221, 0.25); }
+    body.theme-light .moscow-card.could { background-color: #f0f9ff; border-color: rgba(14, 165, 233, 0.25); }
+    body.theme-light .moscow-card.would { background-color: #f4f4f5; border-color: rgba(113, 113, 122, 0.25); }
+
+    /* Simulator Controls in Light Theme overrides */
+    body.theme-light .sim-panel-controls {
+      background-color: #ffffff !important;
+      border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    body.theme-light .control-input {
+      background: #f4f4f5 !important;
+      border-color: rgba(0, 0, 0, 0.08) !important;
+      color: var(--accent-pink) !important;
+    }
+
+    body.theme-light .control-input:focus {
+      border-color: var(--accent-pink) !important;
+      background: #ffffff !important;
+    }
+
+    body.theme-light .sim-slider {
+      background: rgba(0, 0, 0, 0.06) !important;
+    }
+
+    body.theme-light .metric-box {
+      background-color: #ffffff !important;
+      border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    body.theme-light .chart-container {
+      background-color: #f4f4f5 !important;
+      border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    body.theme-light .menu-column {
+      background-color: #ffffff !important;
+      border-color: rgba(0, 0, 0, 0.08) !important;
+    }
+
+    body.theme-light details {
+      background-color: #ffffff !important;
+    }
+
+    body.theme-light details[open] {
+      border-color: var(--border-accent) !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <a href="#" class="brand">
+      <div class="brand-logo">
+        <!-- Glowing Pizza Slice SVG -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 22H22L12 2Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M12 6V18" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="9" cy="15" r="1.5" fill="white"/>
+          <circle cx="15" cy="14" r="1" fill="white"/>
+          <circle cx="12" cy="10" r="1" fill="white"/>
+        </svg>
+      </div>
+      <span class="brand-name">SliceMatic</span>
+    </a>
+
+    <span class="nav-label">Main Dashboard</span>
+    <ul class="nav-menu">
+      <li class="nav-item active" data-tab="cover">
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Executive Cover Page
+        </a>
+      </li>
+      <li class="nav-item" data-tab="part-a">
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Part A: Product Specs (PRD)
+        </a>
+      </li>
+      <li class="nav-item" data-tab="part-b">
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Part B: Business Economics
+        </a>
+      </li>
+      <li class="nav-item" data-tab="simulator">
+        <a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+          Interactive Simulator
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <p>FDE Applied Project</p>
+      <p>PizzaFlow · Batch 2487</p>
+      <p>Version 1.0 (Unified)</p>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="main-content">
+
+    <!-- ==================== EXECUTIVE COVER PAGE ==================== -->
+    <section id="cover" class="page-section active">
+      <div class="cover-view">
+        <div class="cover-header">
+          <div class="cover-subtitle">FDE Programme · Group 2 · PizzaFlow</div>
+          <h1 class="cover-title">SliceMatic</h1>
+          <div class="cover-desc">Product Requirements Document (Part A) + Business Unit Economics Deep-Dive (Part B)</div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-card">
+            <div class="stat-number">Rs.511</div>
+            <div class="stat-label">Contribution / Order</div>
+            <div class="stat-desc">Corrected ex-GST margin (60.3%)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">~13/day</div>
+            <div class="stat-label">True Break-Even</div>
+            <div class="stat-desc">Based on Rs.2.03L monthly fixed costs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">~18 mo</div>
+            <div class="stat-label">Capital Payback</div>
+            <div class="stat-desc">Against Rs.15L initial capital outlay</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="sub-section-title">Assignment Context & Scope</h3>
+          <p style="color: var(--text-secondary); font-size: 15px; margin-bottom: 16px;">
+            This combined report presents the digital transformation strategy for <strong>SliceMatic</strong>, a single-outlet pizza delivery brand in New Ashok Nagar, Delhi. 
+            By replacing manual phone ordering with a structured digital ordering application, the business addresses throughput constraints, eliminates billing errors, and secures customer order histories to drive retention via AI recommendations.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 13px;">
+            <div>
+              <strong style="color: var(--accent-pink);">Part A: Product Requirements Document</strong>
+              <p style="color: var(--text-muted); margin-top: 4px;">Core functional specifications for the Gradio MVP (Stage 2) and the Supabase-backed Production Web App (Stage 3), detailing personas, user stories, edge cases, and an AI recommendation engine flow.</p>
+            </div>
+            <div>
+              <strong style="color: var(--accent-purple);">Part B: Business Analysis & Unit Economics</strong>
+              <p style="color: var(--text-muted); margin-top: 4px;">A challenged and corrected economics model that reconciles variable cost leaks in multi-pizza orders, evaluates aggregator commission taxes, models cash flow paybacks, and answers challenge queries.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cover-metadata">
+          <div class="meta-item">
+            <span class="meta-label">Outlet Location</span>
+            <span class="meta-value">New Ashok Nagar, Delhi</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">AI Option Selected</span>
+            <span class="meta-value">Option A - Personalised Recommendation Engine</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Revision Date</span>
+            <span class="meta-value">June 25, 2026</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PART A: PRODUCT REQUIREMENTS DOCUMENT ==================== -->
+    <section id="part-a" class="page-section">
+      <div class="section-title">
+        <span>Part A — Product Requirements Document</span>
+      </div>
+
+      <div class="card">
+        <h3 class="sub-section-title">A.1 Product Vision</h3>
+        <p>SliceMatic's ordering system is a digital intake-to-bill platform that replaces phone ordering for a single-outlet pizza delivery brand in New Ashok Nagar, Delhi. It lets a customer self-serve the entire ordering journey — identity, quantity, menu selection, discount, GST, and payment — in a guided flow that computes every rupee deterministically and persists each completed order as structured, analysable data. It serves two users: the customer, who gets a fast, error-free order with a transparent bill, and the owner, who gets a queryable order database that surfaces best-sellers, peak hours, and repeat-customer behaviour. The system removes three failures of phone ordering: the single-line throughput ceiling at peak, manual pricing/GST errors, and the total absence of order data. By Stage 3 the system adds a personalised recommendation engine and an admin analytics dashboard.</p>
+        <p style="margin-top: 12px; font-weight: 600; color: var(--color-warning);">What we are NOT building (at any stage):</p>
+        <p style="color: var(--text-secondary); font-size: 13px;">Real payment gateway integration (confirmation only), delivery address capture/zone validation, inventory management, or mixed-pizza orders (only 1 combo type per order).</p>
+      </div>
+
+      <div class="card">
+        <h3 class="sub-section-title">A.2 Target Customer Personas</h3>
+        <div class="grid-3">
+          <div class="persona-card">
+            <div class="persona-header">
+              <div class="persona-avatar">C</div>
+              <div>
+                <div class="persona-title">The Customer</div>
+                <div class="persona-subtitle">Persona 1 · 18–35 Yrs</div>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary);">Urban millennial/Gen Z in New Ashok Nagar. Orders pizza by phone. Pain points: busy peak signals, no order history, no digital receipts, wants quick checkout.</p>
+          </div>
+          <div class="persona-card">
+            <div class="persona-header">
+              <div class="persona-avatar">N</div>
+              <div>
+                <div class="persona-title">New Customer</div>
+                <div class="persona-subtitle">Persona 2 · First Order</div>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary);">Same demographic. Has no order history in the system. Needs a graceful bypass of the recommendation step without seeing errors or empty elements (FR-18).</p>
+          </div>
+          <div class="persona-card">
+            <div class="persona-header">
+              <div class="persona-avatar">A</div>
+              <div>
+                <div class="persona-title">Rajan (Owner)</div>
+                <div class="persona-subtitle">Persona 3 · Admin</div>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary);">Sole proprietor, non-technical. Has zero visibility today into metrics. Needs a secure dashboard to view order history, daily metrics, and CSV exports for accounting.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="sub-section-title">A.3 User Stories</h3>
+        <div class="grid-2" style="font-size: 13px;">
+          <div>
+            <strong style="color: var(--accent-pink); display: block; margin-bottom: 8px;">Customer-Facing</strong>
+            <ul class="custom-list">
+              <li>As a customer, I want to place a pizza order digitally so I don't get busy signals at peak hours.</li>
+              <li>As a returning customer, I want a personalised recommendation based on past orders to decide faster.</li>
+              <li>As a new customer, I want to bypass recommendations silently and go straight to the menu.</li>
+              <li>As a customer, I want an itemised bill with discount and GST details so I know exactly what I pay.</li>
+              <li>As a customer, I want specific validation error messages so I can correct inputs without resetting.</li>
+            </ul>
+          </div>
+          <div>
+            <strong style="color: var(--accent-purple); display: block; margin-bottom: 8px;">Admin & Operator</strong>
+            <ul class="custom-list">
+              <li>As the owner, I want a secure login so only I can access sensitive business metrics.</li>
+              <li>As the owner, I want to filter orders by date range and payment mode to reconcile cash vs UPI.</li>
+              <li>As the owner, I want to see revenue, top-selling pizza, and busiest hour to optimize staffing.</li>
+              <li>As the owner, I want to export orders to CSV to easily share with my accountant.</li>
+              <li>As the operator, I want menu prices stored in a database (Stage 3) so we update them code-free.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- A.4 Functional Requirements Table -->
+      <div class="card">
+        <h3 class="sub-section-title">A.4 Functional Requirements</h3>
+        
+        <details open>
+          <summary>Stage 2 — Gradio MVP (Core Logic Validation)</summary>
+          <div class="details-content">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th style="width: 200px;">Requirement</th>
+                    <th>Detail Specification</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>FR-1</strong></td>
+                    <td>Customer name</td>
+                    <td>Alphabets and spaces only; min 2, max 40 chars. Reject empty, spaces-only, digits. Validate after `strip()`.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-2</strong></td>
+                    <td>Customer phone</td>
+                    <td>Exactly 10 digits; must start with 6, 7, 8, or 9 (Indian mobile format). Reject anything else.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-3</strong></td>
+                    <td>Session timestamp</td>
+                    <td>Record an ISO-8601 timestamp at the start of every new order session.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-4</strong></td>
+                    <td>Quantity selection</td>
+                    <td>Integer 1–10 inclusive. Reject 0, negatives, floats, non-numerics, and &gt;10 with a specific message.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-5</strong></td>
+                    <td>Menu load at startup</td>
+                    <td>Load all 3 menu files at app startup, before user interaction. Format: `ID;Name;Price`. No hardcoded items.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-6</strong></td>
+                    <td>Menu display</td>
+                    <td>Show each category as a numbered list with name + price in INR.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-7</strong></td>
+                    <td>Menu selection</td>
+                    <td>Accept item number only. One base + one pizza + one topping. Qty N = N units of same combo. Reject out-of-range, letters, empty.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-8</strong></td>
+                    <td>Pricing engine</td>
+                    <td><code>Line total = (base price + pizza price + topping price) x quantity</code>.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-9</strong></td>
+                    <td>Discount logic</td>
+                    <td>Auto-apply 10% when quantity &gt;= 5. Show as explicit bill line. No discount for qty &lt;= 4.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-10</strong></td>
+                    <td>GST calculation</td>
+                    <td>18% GST on the post-discount subtotal. Menu prices are exclusive of GST.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-11</strong></td>
+                    <td>Itemised bill</td>
+                    <td>Per-unit base/pizza/topping, qty, unit price, subtotal, discount (if any), GST, final payable — aligned, with currency symbol. Rendered in gr.Dataframe or gr.HTML.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-12</strong></td>
+                    <td>Payment flow</td>
+                    <td>Exactly 3 modes: Cash, Card, UPI. Mode-specific confirmation message. Reject invalid selection.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-13</strong></td>
+                    <td>Order persistence</td>
+                    <td>Append to <code>orders_log.txt</code>. Create if absent. One order per block, pipe-separated, blank line between orders.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+
+        <details>
+          <summary>Stage 3 — Production Web App (Database & AI Extensions)</summary>
+          <div class="details-content">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th style="width: 200px;">Requirement</th>
+                    <th>Detail Specification</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>FR-14</strong></td>
+                    <td>Supabase schema</td>
+                    <td>3 tables: <code>menu_items</code> (id, category, name, price, is_active), <code>orders</code> (id, customer_name, phone, quantity, subtotal, discount_amount, gst_amount, total, payment_mode, created_at), <code>order_line_items</code> (id, order_id FK, item_category, item_name, unit_price).</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-15</strong></td>
+                    <td>Menu from DB</td>
+                    <td>Stage 3 loads menu from <code>menu_items</code> table. Category field (base/pizza/topping) drives display. No text files.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-16</strong></td>
+                    <td>Persist to Supabase</td>
+                    <td>Every completed order writes to <code>orders</code> and <code>order_line_items</code>. Phone number is key identifier for history lookups. All Stage 2 math preserved.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-17</strong></td>
+                    <td>AI recommendation — returning</td>
+                    <td>After phone validated, query Supabase for last 10 orders by phone. If results exist, send to OpenRouter with system prompt. Show recommended pizza + topping + 1-2 sentence reason before menu selection. Customer can accept or skip.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-18</strong></td>
+                    <td>AI recommendation — new</td>
+                    <td>If no order history found, skip recommendation step silently and proceed to menu selection. No error shown.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-19</strong></td>
+                    <td>AI recommendation — fallback</td>
+                    <td>If OpenRouter returns null, errors, or times out (&gt;5s): display fallback message and proceed. Do not block ordering. Log the failure.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-20</strong></td>
+                    <td>Admin auth</td>
+                    <td>Admin login via Supabase Auth. Only authenticated admin can access dashboard. Non-admin redirected to login.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-21</strong></td>
+                    <td>Admin order history</td>
+                    <td>All orders in a table. Filterable by date range and payment mode.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-22</strong></td>
+                    <td>Admin metrics</td>
+                    <td>Total revenue, top-selling pizza by volume, busiest hour of day (derived from <code>created_at</code>).</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-23</strong></td>
+                    <td>Admin CSV export</td>
+                    <td>Export button downloads all currently filtered orders as CSV with headers.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>FR-24</strong></td>
+                    <td>Vercel deployment</td>
+                    <td>Frontend hosted on Vercel with public URL. Full ordering flow functional end-to-end.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- A.5 AI Feature Spec -->
+      <div class="card">
+        <h3 class="sub-section-title">A.5 AI Feature Specification — Recommendation Engine (Option A)</h3>
+        <p style="margin-bottom: 12px;"><strong>Trigger:</strong> Triggered immediately after the phone number is validated, before menu selection is shown to the customer.</p>
+        
+        <div style="background-color: rgba(255, 255, 255, 0.02); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 13px; margin-bottom: 16px;">
+          <strong style="color: var(--accent-pink);">Verbatim System Prompt:</strong>
+          <pre style="margin-top: 8px; color: var(--text-secondary); white-space: pre-wrap; font-family: monospace;">"You are a recommendation engine for SliceMatic, a pizza delivery outlet in Delhi. Based on the customer's past orders listed below, recommend ONE pizza and ONE topping they haven't tried recently — or their clear favourite if they consistently reorder it. Be brief and friendly, one or two sentences max. Respond only as JSON: {pizza: string, topping: string, reason: string}. Past orders: [order_history]"</pre>
+        </div>
+        
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          <strong>Model Selection:</strong> Mistral 7B Instruct via OpenRouter. Latency must be capped at 5s. If it exceeds 5s, the system must trigger <strong>FR-19 (fallback)</strong>: <em>"We couldn't generate a suggestion — here's the full menu."</em> and bypass within 3 seconds.
+        </p>
+      </div>
+
+      <!-- A.6 & A.7 Non-Functional & Acceptance Criteria -->
+      <div class="card">
+        <h3 class="sub-section-title">A.6 Non-Functional Requirements & A.7 Acceptance Criteria</h3>
+        <div style="font-size: 13px;">
+          <strong>Input Validation Rules:</strong>
+          <ul>
+            <li>Name: Regex <code>^[A-Za-z ]{2,40}$</code> after strip(). No numbers allowed.</li>
+            <li>Phone: Regex <code>^[6-9][0-9]{9}$</code> (must be a valid 10-digit Indian mobile number).</li>
+            <li>Quantity: Must parse as integer; reject floats ('2.5'), non-numerics ('three'), 0, or &gt;10.</li>
+            <li>Menu selection: Must be integer within <code>1..len(menu)</code>.</li>
+          </ul>
+        </div>
+
+        <div class="table-container" style="margin-top: 16px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>Given (Context)</th>
+                <th>When (Trigger)</th>
+                <th>Then (Expected Behaviour)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Name validation error</td>
+                <td>User enters spaces only (' ') or digits ('Raj123')</td>
+                <td>They click submit / enter</td>
+                <td>System shows: <code>Name must be 2–40 letters (spaces allowed), no numbers.</code> and re-prompts.</td>
+              </tr>
+              <tr>
+                <td>Phone validation error</td>
+                <td>User enters '1234567890' (starts with 1)</td>
+                <td>They click submit / enter</td>
+                <td>System shows: <code>Enter a 10-digit Indian mobile starting with 6, 7, 8, or 9.</code> and re-prompts.</td>
+              </tr>
+              <tr>
+                <td>Quantity validation error</td>
+                <td>User enters 'three' or '11'</td>
+                <td>They click submit / enter</td>
+                <td>System shows appropriate range / parsing error and blocks calculation.</td>
+              </tr>
+              <tr>
+                <td>Missing Menu File</td>
+                <td><code>Types_of_Pizza.txt</code> is missing from directory</td>
+                <td>Application loads</td>
+                <td>System shows: <code>Menu file Types_of_Pizza.txt not found. Please check and restart.</code> and exits immediately.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- A.8 User Flow Diagram -->
+      <div class="card">
+        <h3 class="sub-section-title">A.8 User Flow Diagram</h3>
+        <div class="flow-diagram">
+          <div class="flow-stage">
+            <span class="flow-stage-title">App Startup</span>
+            <div class="flow-steps">
+              <div class="flow-step">1. Load Menu Files</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">2. Check Validity</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">3. Log Session Timestamp</div>
+            </div>
+          </div>
+          <div class="flow-stage">
+            <span class="flow-stage-title">Customer Intake</span>
+            <div class="flow-steps">
+              <div class="flow-step">4. Enter Name (Validate)</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">5. Enter Phone (Validate)</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">6. DB History Query</div>
+            </div>
+          </div>
+          <div class="flow-stage">
+            <span class="flow-stage-title">Recommendation</span>
+            <div class="flow-steps">
+              <div class="flow-step" style="border-color: var(--accent-purple);">7a. History Found -> AI Recommendation Card</div>
+              <div class="flow-step" style="border-color: var(--text-muted);">7b. No History / Error -> Silent Bypass</div>
+            </div>
+          </div>
+          <div class="flow-stage">
+            <span class="flow-stage-title">Menu & Checkout</span>
+            <div class="flow-steps">
+              <div class="flow-step">8. Quantity selection</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">9. Select Items (Base+Pizza+Topping)</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">10. Pricing & Discounts (Qty >= 5)</div>
+            </div>
+          </div>
+          <div class="flow-stage">
+            <span class="flow-stage-title">Payment & Save</span>
+            <div class="flow-steps">
+              <div class="flow-step">11. Confirm Cash/Card/UPI</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">12. Render Itemised Bill</div>
+              <div class="flow-arrow">→</div>
+              <div class="flow-step">13. Append order to Supabase / Log file</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- A.9 to A.15 Remaining Sections -->
+      <div class="card">
+        <h3 class="sub-section-title">A.9 Edge Cases — Five-Category Framework</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <details>
+            <summary>Empty State (No prior data / fresh states)</summary>
+            <div class="details-content">
+              <ul>
+                <li><strong>New customer</strong>: Has zero orders in Supabase. System skips the recommendation step silently and displays the menu (FR-18).</li>
+                <li><strong>Admin dashboard on launch</strong>: DB contains zero orders. Admin dashboard renders a clean "No orders yet" placeholder rather than crashing or rendering blank charts.</li>
+                <li><strong>Empty menu file at boot</strong>: A menu file contains 0 valid rows after parsing. System refuses to start and logs which specific file is empty.</li>
+              </ul>
+            </div>
+          </details>
+          <details>
+            <summary>Error State (API failures & write blocks)</summary>
+            <div class="details-content">
+              <ul>
+                <li><strong>OpenRouter HTTP errors / Timeout (&gt;5s)</strong>: Displays a friendly fallback card within 3 seconds, logging the trace, and transitions the flow straight to manual menu selection.</li>
+                <li><strong>Supabase write failure</strong>: If writing the order fails at checkout, the UI displays: <em>"Order confirmed but could not be saved. Contact operator."</em> to keep customer reassurance without crashing.</li>
+                <li><strong>File write failure (Gradio logs)</strong>: If <code>orders_log.txt</code> is read-only, confirm the order to the customer, prompt operator warning, and preserve app state.</li>
+              </ul>
+            </div>
+          </details>
+          <details>
+            <summary>Boundary Conditions (Item limits & thresholds)</summary>
+            <div class="details-content">
+              <ul>
+                <li><strong>Quantity = 1 vs Quantity = 10</strong>: Both quantities are accepted. Quantity 10 does not trigger the discount threshold (FR-9 requires Qty &gt;= 5). Quantity 11 is rejected.</li>
+                <li><strong>Quantity = 5 exactly</strong>: Triggers the 10% discount logic. Subtotal line item details the exact post-discount calculation.</li>
+                <li><strong>Menu Selection indexes</strong>: Entering selection 1 or N (last item) succeeds. Selection 0 or N+1 fails.</li>
+              </ul>
+            </div>
+          </details>
+          <details>
+            <summary>Concurrent Action & Multi-session Collision</summary>
+            <div class="details-content">
+              <ul>
+                <li><strong>Two concurrent Gradio sessions writing to logs</strong>: Known constraint in Stage 2. Replaced in Stage 3 by moving to transactional writes in Supabase.</li>
+                <li><strong>Admin reads metrics while customer orders</strong>: Supabase handles concurrent database read/write isolation; admin panel does not block orders.</li>
+              </ul>
+            </div>
+          </details>
+          <details>
+            <summary>Permission Violations</summary>
+            <div class="details-content">
+              <ul>
+                <li><strong>Non-admin attempts to view metrics</strong>: App intercepts and redirects to Supabase Auth login. No order records are exposed in the DOM.</li>
+                <li><strong>Admin tries to modify orders</strong>: Admin view is strictly read-only. No edit/delete API calls exist in the admin codebase.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 class="sub-section-title">A.10 Out of Scope</h3>
+          <ul class="custom-list" style="font-size: 13px;">
+            <li>Real payment gateway processing (only mock buttons).</li>
+            <li>Delivery address capture or geographical distance APIs.</li>
+            <li>Inventory management (unlimited menu item quantities).</li>
+            <li>Mixed item combinations (single pizza type + topping per order block).</li>
+            <li>Multi-tenant logins for customers (phone number acts as session key).</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 class="sub-section-title">A.12 Drawbacks Analysis</h3>
+          <ul class="custom-list" style="font-size: 13px;">
+            <li><strong>Single session state</strong>: Gradio MVP does not support isolation of state across separate tabs. Collisions occur easily during simultaneous tests.</li>
+            <li><strong>Flat file log constraints</strong>: <code>orders_log.txt</code> will experience performance issues at scale. No indexing, slow analytics lookups.</li>
+            <li><strong>Discount leaks</strong>: Hardcoded 10% discount on qty &gt;= 5 might be exploited if average basket is high, leading to margin leaks.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="sub-section-title">A.13 Cost vs Value Analysis & A.15 version History</h3>
+        <div class="grid-2" style="font-size: 13px;">
+          <div>
+            <strong>Estimated Build Effort:</strong>
+            <table>
+              <thead>
+                <tr>
+                  <th>Stage</th>
+                  <th>Scope</th>
+                  <th>Effort</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Stage 1</td>
+                  <td>PRD + Economics</td>
+                  <td>8–12 hrs</td>
+                </tr>
+                <tr>
+                  <td>Stage 2</td>
+                  <td>Gradio MVP logic</td>
+                  <td>20–28 hrs</td>
+                </tr>
+                <tr>
+                  <td>Stage 3</td>
+                  <td>Supabase, Admin dashboard, OpenRouter</td>
+                  <td>45–60 hrs</td>
+                </tr>
+                <tr style="font-weight: bold;">
+                  <td>Total</td>
+                  <td>Full Product Delivery</td>
+                  <td>75-100 hrs</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div>
+            <strong>Document Revision History:</strong>
+            <table>
+              <thead>
+                <tr>
+                  <th>Ver</th>
+                  <th>Date</th>
+                  <th>Core Changes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>v0.1</td>
+                  <td>2026-06-23</td>
+                  <td>Initial draft for Stage 2 MVP.</td>
+                </tr>
+                <tr>
+                  <td>v0.2</td>
+                  <td>2026-06-24</td>
+                  <td>Added Given-When-Then tables and edge cases.</td>
+                </tr>
+                <tr style="color: var(--accent-pink);">
+                  <td>v0.3</td>
+                  <td>2026-06-24</td>
+                  <td>Expanded to Stage 3 Supabase & AI specs.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOSCOW MATRIX (USER REQUEST KEY TAKEAWAY FOR PART A) -->
+      <div class="card" id="moscow-section" style="border-color: var(--accent-pink);">
+        <h3 class="sub-section-title" style="margin-top: 0; color: var(--accent-pink);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="stroke: var(--accent-pink);"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/><polyline points="2 15.5 12 15.5 22 15.5"/><line x1="12" y1="2" x2="12" y2="15.5"/></svg>
+          Key Takeaways: Part A MoSCoW Prioritization Matrix
+        </h3>
+        <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">
+          This prioritization framework categorises the product requirements of Part A to guide phase-by-phase implementation. It ensures developers focus on core ordering stability before building secondary database synchronisation and AI recommendation models.
+        </p>
+
+        <div class="moscow-matrix">
+          <div class="moscow-card must">
+            <h3 class="moscow-title">MUST HAVE (Core Ordering Engine)</h3>
+            <div class="moscow-content">
+              <ul>
+                <li><strong>FR-1 & FR-2 Validation</strong>: Strict regex check of name (2-40 characters, letters only) and Indian phone number validation (10 digits starting with 6-9) to secure billing accuracy.</li>
+                <li><strong>FR-5 Menu Loading</strong>: Local file ingestion of pizzas, bases, and toppings at boot before any customer interaction.</li>
+                <li><strong>FR-7 & FR-8 Pricing</strong>: Accept number-only selections of 1 Base + 1 Pizza + 1 Topping, evaluating line totals via deterministic formula.</li>
+                <li><strong>FR-10 GST & FR-11 Bill</strong>: Apply 18% GST ex-menu price post-discount, outputting aligned itemised invoice.</li>
+                <li><strong>FR-13 Persistence</strong>: Local file logging of orders using pipe-separated formatting for historical records.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="moscow-card should">
+            <h3 class="moscow-title">SHOULD HAVE (Production & Management)</h3>
+            <div class="moscow-content">
+              <ul>
+                <li><strong>FR-14 Supabase Integration</strong>: Transition menu loading (FR-15) and order writes (FR-16) from flat-files to multi-table transactional relational database tables (menu_items, orders, order_line_items).</li>
+                <li><strong>FR-20 Admin Authentication</strong>: Protect the analytics view behind secure Supabase Auth admin logins.</li>
+                <li><strong>FR-21 & FR-22 Admin Metrics</strong>: Build order table with date-range filters, payment filters, and key dashboard cards (revenue, top pizza, busiest hour).</li>
+                <li><strong>FR-23 CSV Exporter</strong>: One-click export of currently filtered orders to spreadsheet files for Rajan's accountants.</li>
+                <li><strong>FR-9 Discount Logic</strong>: Automated 10% discount for orders containing 5 or more pizzas, itemised on bills.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="moscow-card could">
+            <h3 class="moscow-title">COULD HAVE (AI Personalisation)</h3>
+            <div class="moscow-content">
+              <ul>
+                <li><strong>FR-17 Returning Recommendations</strong>: Query database for returning phone numbers, sending last 10 orders to OpenRouter model (Mistral 7B) to recommend a pizza/topping combo before ordering.</li>
+                <li><strong>FR-18 Silent Bypass</strong>: New customers with zero database records skip recommendations automatically without latency.</li>
+                <li><strong>FR-19 Failure Fallback</strong>: 5-second API query limit. If the LLM call times out or throws errors, display generic warning card and load menu within 3s.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="moscow-card would">
+            <h3 class="moscow-title">WOULD HAVE (Deferred / Out-of-Scope)</h3>
+            <div class="moscow-content">
+              <ul>
+                <li><strong>Real Payments Integration</strong>: UPI, card tokenisation, or payment gateways are deferred. UI supports cash, card, and UPI selections as confirmation modes only.</li>
+                <li><strong>Delivery & Inventory</strong>: Capturing customer location addresses, checking stock limits, or decrementing ingredient stock lists are deferred to future stages.</li>
+                <li><strong>Mixed Basket Orders</strong>: Ability to order different pizzas in a single cart session (currently limited to 1 combination type per order).</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PART B: BUSINESS ANALYSIS & UNIT ECONOMICS ==================== -->
+    <section id="part-b" class="page-section">
+      <div class="section-title">
+        <span>Part B — Business Analysis & Unit Economics</span>
+      </div>
+
+      <!-- Executive Summary Comparison -->
+      <div class="card">
+        <h3 class="sub-section-title">00 Executive Summary</h3>
+        <p>SliceMatic is a viable single-outlet QSR with genuinely strong unit economics — but the reference model oversells it. After correcting one structural error, the business is healthy, not spectacular, and its real risks sit in demand ramp-up and aggregator commission, not in rent or COGS.</p>
+        
+        <div class="comparison-wrapper">
+          <div class="comp-card reference">
+            <div class="comp-title">
+              <span class="badge badge-error">X</span> Reference Model Claims
+            </div>
+            <ul style="font-size: 13px;">
+              <li>Contribution margin of 76% (Rs.644/order).</li>
+              <li>Break-even requires only 11 orders/day.</li>
+              <li>Operating margin of 58.9% at launch.</li>
+              <li>Rent sensitivity flagged as a headline risk.</li>
+            </ul>
+          </div>
+          <div class="comp-card corrected">
+            <div class="comp-title">
+              <span class="badge badge-success">✓</span> Corrected Deep-Dive Analysis
+            </div>
+            <ul style="font-size: 13px;">
+              <li><strong>Contribution margin ~60% (Rs.511/order)</strong>: Fixed double-counting delivery logic in multi-pizza baskets.</li>
+              <li><strong>Break-even ~13 orders/day</strong> (own-channel), rising to 15/day blended.</li>
+              <li><strong>Operating margin ~43%</strong> at mature 60% capacity (own-channel), ~35% blended.</li>
+              <li>Rent is not the constraint; demand ramp and aggregator mix are.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="background-color: rgba(255, 0, 127, 0.03); border: 1px solid var(--border-accent); padding: 16px; border-radius: 8px; font-size: 13px;">
+          <strong>The One-Line Business Case for Digital Ordering:</strong><br>
+          Every order placed through the owned digital channel earns <strong>Rs.511</strong> of contribution; the same order via Zomato/Swiggy earns only <strong>Rs.339</strong> after a 25% commission. The digital ordering system exists to convert aggregator-acquired customers into owned, repeat customers. The <strong>Rs.172/order gap</strong> is the entire ROI story.
+        </div>
+      </div>
+
+      <!-- Market Context -->
+      <div class="card">
+        <h3 class="sub-section-title">01 Market & Competitive Context</h3>
+        <ul class="custom-list" style="font-size: 13px;">
+          <li><strong>Delivery format is the QSR standard:</strong> ~60-70% of pizza orders are delivery. Dine-in is treated as immaterial for conservative modelling.</li>
+          <li><strong>Aggregator duopoly floor:</strong> Zomato/Swiggy own early customer discovery. A new outlet will see 50-60% of early orders arrive via aggregators at 20-25% commissions.</li>
+          <li><strong>Domino's standard:</strong> 30-minute delivery guarantees are a threshold requirement, not a product differentiator.</li>
+          <li><strong>Locality Moat:</strong> Owned customer data (numbers, ordering behaviors) captures repeats, shifting them from commission-heavy aggregators.</li>
+        </ul>
+      </div>
+
+      <!-- Cost Structure -->
+      <div class="card">
+        <h3 class="sub-section-title">02 Cost Structure</h3>
+        <div class="grid-2">
+          <div>
+            <strong>2.1 Monthly Fixed Costs (Total: Rs.2,02,910)</strong>
+            <div class="table-container" style="margin-top: 8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cost Item</th>
+                    <th>Monthly Fee</th>
+                    <th>% of Fixed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Kitchen rent (1,200 sq ft)</td>
+                    <td>Rs. 55,000</td>
+                    <td>27.1%</td>
+                  </tr>
+                  <tr>
+                    <td>Delivery riders (2, fixed)</td>
+                    <td>Rs. 32,000</td>
+                    <td>15.8%</td>
+                  </tr>
+                  <tr>
+                    <td>Head chef</td>
+                    <td>Rs. 28,000</td>
+                    <td>13.8%</td>
+                  </tr>
+                  <tr>
+                    <td>Counter & billing staff</td>
+                    <td>Rs. 18,000</td>
+                    <td>8.9%</td>
+                  </tr>
+                  <tr>
+                    <td>Kitchen helper</td>
+                    <td>Rs. 16,500</td>
+                    <td>8.1%</td>
+                  </tr>
+                  <tr>
+                    <td>Equipment EMI (36 months)</td>
+                    <td>Rs. 14,500</td>
+                    <td>7.1%</td>
+                  </tr>
+                  <tr>
+                    <td>Ovens + AC Utilities</td>
+                    <td>Rs. 12,600</td>
+                    <td>6.2%</td>
+                  </tr>
+                  <tr>
+                    <td>Fixed Marketing</td>
+                    <td>Rs. 8,000</td>
+                    <td>3.9%</td>
+                  </tr>
+                  <tr>
+                    <td>Contingency / Maintenance</td>
+                    <td>Rs. 5,760</td>
+                    <td>2.8%</td>
+                  </tr>
+                  <tr>
+                    <td>LPG Gas (3 cylinders)</td>
+                    <td>Rs. 5,550</td>
+                    <td>2.7%</td>
+                  </tr>
+                  <tr>
+                    <td>Packaging (fixed base)</td>
+                    <td>Rs. 4,200</td>
+                    <td>2.1%</td>
+                  </tr>
+                  <tr>
+                    <td>Broadband POS SaaS</td>
+                    <td>Rs. 2,800</td>
+                    <td>1.4%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted);">
+              *Observation: Labor (Riders + Chef + Helper + Counter) represents 47% of fixed cost (Rs.94,500). Implementing digital ordering allows Rajan to make the Counter Role (Rs.18,000) redundant.
+            </p>
+          </div>
+
+          <div>
+            <strong>2.2 Variable Costs - Per Pizza vs Per Order</strong>
+            <p style="font-size: 12px; color: var(--text-secondary); margin: 8px 0;">
+              An average order contains ~2 pizzas (AOV Rs.847 / ex-GST). The reference model makes a critical error by calculating delivery variable costs per-pizza, overstating total variable costs significantly.
+            </p>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Component</th>
+                    <th>Basis</th>
+                    <th>Rate</th>
+                    <th>Per 2-Pizza Order</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Ingredients</td>
+                    <td>Per Pizza</td>
+                    <td>Rs. 130</td>
+                    <td>Rs. 260</td>
+                  </tr>
+                  <tr>
+                    <td>Packaging</td>
+                    <td>Per Pizza</td>
+                    <td>Rs. 18</td>
+                    <td>Rs. 36</td>
+                  </tr>
+                  <tr>
+                    <td>Delivery Incentive</td>
+                    <td>Per Order</td>
+                    <td>Rs. 22</td>
+                    <td>Rs. 22</td>
+                  </tr>
+                  <tr>
+                    <td>PG Fee (1.8% GMV)</td>
+                    <td>Per Order</td>
+                    <td>1.8%</td>
+                    <td>Rs. 18</td>
+                  </tr>
+                  <tr style="font-weight: bold; background-color: rgba(255,255,255,0.02);">
+                    <td>Total Variable Cost</td>
+                    <td>Per Order</td>
+                    <td>-</td>
+                    <td>Rs. 336</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="inconsistency-callout">
+              <div class="inconsistency-title">
+                <span class="badge badge-error">Trap</span> The Modeling Trap
+              </div>
+              <p style="font-size: 11px; color: var(--text-secondary);">
+                The reference COGS table embeds the per-order delivery cost (Rs.22) inside the per-pizza cost, meaning a 2-pizza order would double-count delivery costs as Rs.44. In reality, delivery riders take one trip per order, meaning Rs.22 is a fixed cost per order block.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Unit Economics and Margin splits -->
+      <div class="card">
+        <h3 class="sub-section-title">03 Unit Economics & Margin splits</h3>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Margherita</th>
+                <th>Farm House</th>
+                <th>Cheese Burst</th>
+                <th>Average Pizza</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Base ingredients</td>
+                <td>38</td>
+                <td>45</td>
+                <td>72</td>
+                <td>52</td>
+              </tr>
+              <tr>
+                <td>Sauce + seasoning</td>
+                <td>12</td>
+                <td>14</td>
+                <td>14</td>
+                <td>13</td>
+              </tr>
+              <tr>
+                <td>Cheese (mozzarella)</td>
+                <td>28</td>
+                <td>32</td>
+                <td>65</td>
+                <td>38</td>
+              </tr>
+              <tr>
+                <td>Pizza-specific toppings</td>
+                <td>8</td>
+                <td>22</td>
+                <td>18</td>
+                <td>17</td>
+              </tr>
+              <tr>
+                <td>Add-on topping (avg 1)</td>
+                <td>10</td>
+                <td>10</td>
+                <td>10</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td>Packaging (box + bag)</td>
+                <td>18</td>
+                <td>18</td>
+                <td>18</td>
+                <td>18</td>
+              </tr>
+              <tr>
+                <td>Delivery variable cost</td>
+                <td>22</td>
+                <td>22</td>
+                <td>22</td>
+                <td>22</td>
+              </tr>
+              <tr style="font-weight: bold; background-color: rgba(255,255,255,0.025);">
+                <td>Total COGS / Pizza</td>
+                <td>Rs. 136</td>
+                <td>Rs. 163</td>
+                <td>Rs. 219</td>
+                <td>Rs. 170</td>
+              </tr>
+              <tr>
+                <td>Selling Price (Base+Pizza+Topping)</td>
+                <td>Rs. 397</td>
+                <td>Rs. 417</td>
+                <td>Rs. 447</td>
+                <td>Rs. 420</td>
+              </tr>
+              <tr style="font-weight: bold; color: var(--color-success);">
+                <td>Gross Margin / Pizza</td>
+                <td>65.7%</td>
+                <td>60.9%</td>
+                <td>51.0%</td>
+                <td>59.5%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-2" style="margin-top: 16px;">
+          <div>
+            <strong>Margin Splits by Menu Layer:</strong>
+            <ul style="font-size: 13px; margin-top: 8px;">
+              <li><strong>Base (crust)</strong>: Menu Price Band Rs.149-229. Component Cost Rs.38-72. <strong>Margin: ~68-74%</strong>.</li>
+              <li><strong>Pizza (sauce+cheese+toppings)</strong>: Menu Price Band Rs.299-379. Component Cost ~Rs.68. <strong>Margin: ~77-82%</strong>.</li>
+              <li><strong>Add-on toppings</strong>: Menu Price Band Rs.39-69. Component Cost ~Rs.10. <strong>Margin: ~74-85%</strong>.</li>
+            </ul>
+          </div>
+          <div style="background-color: rgba(255, 255, 255, 0.01); border: 1px solid var(--border-color); padding: 16px; border-radius: 8px; font-size: 12px;">
+            <strong style="color: var(--accent-pink);">Where the Margin Lives:</strong><br>
+            Toppings and the pizza layer are the highest-margin items (77-85%). Cheese Burst base is the margin laggard (51%) due to premium mozzarella requirements. This explains why the <strong>AI recommendation engine (FR-17)</strong> is engineered to upsell add-on toppings to drive contribution margins.
+          </div>
+        </div>
+      </div>
+
+      <!-- Contribution Margin & Sensitivity -->
+      <div class="card">
+        <h3 class="sub-section-title">04 Contribution Margin — Reference vs Corrected</h3>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>P&L Line Item (Per order, ex-GST)</th>
+                <th>Reference Doc</th>
+                <th>Corrected (~2-pizza Basket)</th>
+                <th>Deviation Explanation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Revenue (AOV ex-GST)</td>
+                <td>Rs. 847</td>
+                <td>Rs. 847</td>
+                <td>Identical baseline assumption.</td>
+              </tr>
+              <tr>
+                <td>Less: Ingredient COGS</td>
+                <td>Rs. (148)</td>
+                <td>Rs. (260)</td>
+                <td>Reference model deducted cost for 1 pizza instead of a 2-pizza order.</td>
+              </tr>
+              <tr>
+                <td>Less: Packaging</td>
+                <td>Rs. (18)</td>
+                <td>Rs. (36)</td>
+                <td>Reference model deducted packaging for 1 box instead of 2.</td>
+              </tr>
+              <tr>
+                <td>Less: Delivery Variable</td>
+                <td>Rs. (22)</td>
+                <td>Rs. (22)</td>
+                <td>Rider incentive remains flat at Rs.22 per customer trip.</td>
+              </tr>
+              <tr>
+                <td>Less: Payment Gateway (1.8%)</td>
+                <td>Rs. (15)</td>
+                <td>Rs. (18)</td>
+                <td>PG fee evaluates to 1.8% of ex-GST AOV (18 INR vs reference 15 INR).</td>
+              </tr>
+              <tr style="font-weight: bold; background-color: rgba(255,255,255,0.035); font-size: 15px;">
+                <td>Contribution Margin</td>
+                <td style="color: var(--color-error);">Rs. 644 (76.0%)</td>
+                <td style="color: var(--color-success);">Rs. 511 (60.3%)</td>
+                <td>The reference document's margin is overstated by ~26%.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Break-Even & Scenarios -->
+      <div class="card">
+        <h3 class="sub-section-title">05 Break-Even & 06 Scenario Model</h3>
+        <div class="grid-2">
+          <div>
+            <strong>Break-Even Sensitivity Scenarios:</strong>
+            <div class="table-container" style="margin-top: 8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Scenario Condition</th>
+                    <th>CM / Order</th>
+                    <th>Break-Even / Month</th>
+                    <th>Break-Even / Day</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Reference (Overstated)</td>
+                    <td>Rs. 644</td>
+                    <td>315 orders</td>
+                    <td>~11 orders</td>
+                  </tr>
+                  <tr style="font-weight: bold; color: var(--color-success);">
+                    <td>Corrected - Own Channel</td>
+                    <td>Rs. 511</td>
+                    <td>397 orders</td>
+                    <td>~13 orders</td>
+                  </tr>
+                  <tr>
+                    <td>Blended - 40% Aggregator</td>
+                    <td>Rs. 442</td>
+                    <td>459 orders</td>
+                    <td>~15 orders</td>
+                  </tr>
+                  <tr>
+                    <td>Blended - 60% Aggregator (Launch)</td>
+                    <td>Rs. 408</td>
+                    <td>498 orders</td>
+                    <td>~17 orders</td>
+                  </tr>
+                  <tr>
+                    <td>Rent Raised to Rs.70k (Own)</td>
+                    <td>Rs. 511</td>
+                    <td>426 orders</td>
+                    <td>~14 orders</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <strong>06 Scenario Model — Monthly EBITDA (30-day period)</strong>
+            <div class="table-container" style="margin-top: 8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th>Orders/Day</th>
+                    <th>Aggregator Mix</th>
+                    <th>Monthly EBITDA</th>
+                    <th>Operating Margin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="color: var(--color-error);">
+                    <td>Worst (Launch)</td>
+                    <td>20</td>
+                    <td>60%</td>
+                    <td>Rs. 41,800</td>
+                    <td>~8%</td>
+                  </tr>
+                  <tr style="color: var(--color-warning);">
+                    <td>Conservative</td>
+                    <td>30</td>
+                    <td>50%</td>
+                    <td>Rs. 1,79,600</td>
+                    <td>~24%</td>
+                  </tr>
+                  <tr style="color: var(--color-success); font-weight: bold;">
+                    <td>Base (Mature)</td>
+                    <td>47</td>
+                    <td>40%</td>
+                    <td>Rs. 4,20,600</td>
+                    <td>~35%</td>
+                  </tr>
+                  <tr style="color: var(--color-info);">
+                    <td>Optimistic (Own-Heavy)</td>
+                    <td>57</td>
+                    <td>25%</td>
+                    <td>Rs. 5,97,400</td>
+                    <td>~41%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted);">
+              <strong>Key EBITDA Levers:</strong> (1) Volume: moving from 20 to 47 orders/day swings EBITDA by 10x. (2) Channel Mix: every 10% shifted from aggregator to owned channel adds Rs.10-13 per order to the bottom line.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aggregator and Customer Economics -->
+      <div class="card">
+        <h3 class="sub-section-title">07 Aggregator Decision & 08 Customer Economics</h3>
+        <div class="grid-2">
+          <div>
+            <strong>Owned Channel vs Aggregator (25% Commission):</strong>
+            <div class="table-container" style="margin-top: 8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Line Item</th>
+                    <th>Owned (Rs.)</th>
+                    <th>Aggregator (Rs.)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>AOV (ex-GST)</td>
+                    <td>Rs. 847</td>
+                    <td>Rs. 847</td>
+                  </tr>
+                  <tr>
+                    <td>Ingredients + Packaging</td>
+                    <td>Rs. (296)</td>
+                    <td>Rs. (296)</td>
+                  </tr>
+                  <tr>
+                    <td>Aggregator Commission</td>
+                    <td>Rs. 0</td>
+                    <td>Rs. (212)</td>
+                  </tr>
+                  <tr>
+                    <td>Delivery riders incentive</td>
+                    <td>Rs. (22)</td>
+                    <td>Rs. 0</td>
+                  </tr>
+                  <tr>
+                    <td>Payment gateway fee</td>
+                    <td>Rs. (18)</td>
+                    <td>Rs. 0</td>
+                  </tr>
+                  <tr style="font-weight: bold; background-color: rgba(255,255,255,0.02);">
+                    <td>Contribution per order</td>
+                    <td style="color: var(--color-success);">Rs. 511</td>
+                    <td style="color: var(--color-error);">Rs. 339</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted);">
+              *Aggregator orders suffer a 34% hair-cut. Owned orders earn Rs.172 more contribution per basket.
+            </p>
+            <div class="inconsistency-callout" style="border-color: var(--color-info); background-color: rgba(14, 165, 233, 0.03); margin-top: 12px; margin-bottom: 0;">
+              <div class="inconsistency-title" style="color: var(--color-info);">
+                <span class="badge badge-info">Note</span> Aggregator Commission GST
+              </div>
+              <p style="font-size: 11px; color: var(--text-secondary);">
+                Aggregators add 18% GST on top of their 25% commission, raising the gross outflow to 29.5% (approx. Rs.250/order). However, since SliceMatic is GST-registered, this 18% GST portion (Rs.38/order) is fully reclaimed as Input Tax Credit (ITC). The net cost of commission on the P&L stays exactly 25% (Rs.212), making the tax a cash-flow timing item rather than a permanent margin drag.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <strong>08 Customer Economics & Retention:</strong>
+            <ul style="font-size: 13px; margin-top: 8px;">
+              <li><strong>Customer Acquisition Cost (CAC) - Owned:</strong> Rs.80 (calculated from Rs.8,000 monthly marketing / 100 new customers).</li>
+              <li><strong>CAC - Aggregator:</strong> Rs.212 (Aggregator commission of 25% charged on initial order value).</li>
+              <li><strong>Customer Lifetime Value (LTV) - One-time buyer (4 orders):</strong> Rs.2,044.</li>
+              <li><strong>Customer Lifetime Value (LTV) - Loyal buyer (18 orders/yr):</strong> Rs.9,198.</li>
+            </ul>
+            
+            <div class="grid-2" style="margin-top: 16px; font-size: 11px;">
+              <div style="background-color: rgba(16, 185, 129, 0.03); border: 1px solid rgba(16, 185, 129, 0.2); padding: 12px; border-radius: 8px;">
+                <strong style="color: var(--color-success);">Owned Channel Ratio</strong><br>
+                LTV : CAC ≈ <strong>25:1</strong>. Highly profitable if repeat cohorts are preserved via ordering software.
+              </div>
+              <div style="background-color: rgba(239, 68, 68, 0.03); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px;">
+                <strong style="color: var(--color-error);">Aggregator Ratio</strong><br>
+                LTV : CAC &lt; <strong>1:1</strong>. If aggregator orders never convert to owned, the business operates at a structural loss.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Menu, Pricing, Delivery, GST -->
+      <div class="card">
+        <h3 class="sub-section-title">09 Cash Flow, 10 Menu Engineering & 12 Delivery Radius</h3>
+        <div class="grid-3" style="font-size: 13px;">
+          <div>
+            <strong>09 Cash Flow & Capital Ramp:</strong>
+            <ul class="custom-list" style="margin-top: 8px;">
+              <li><strong>Upfront Capital Required</strong>: Rs.15L (Equipment 4.5L, Fit-out 4.0L, Working Capital 2.5L, Marketing/Contingency 4.0L).</li>
+              <li><strong>Ramp-Up assumption</strong>: 20% capacity in month 1, scaling to 60% by month 6.</li>
+              <li><strong>EBITDA & Cash Payback</strong>: EBITDA positive from month 2-3, cumulative cash recovery takes <strong>~18 months</strong>.</li>
+            </ul>
+          </div>
+          
+          <div>
+            <strong>10 Menu Engineering matrix:</strong>
+            <ul class="custom-list" style="margin-top: 8px;">
+              <li><strong>Stars (High Vol / High Margin)</strong>: Margherita, Farm House. Protect quality, highlight prominently.</li>
+              <li><strong>Plowhorses (High Vol / Low Margin)</strong>: Cheese Burst. Re-engineer ingredients or adjust pricing.</li>
+              <li><strong>Puzzles (Low Vol / High Margin)</strong>: Premium & Specialty pizzas. Upsell via AI recommend engine (FR-17).</li>
+            </ul>
+          </div>
+
+          <div>
+            <strong>12 Delivery Radius Viability:</strong>
+            <ul class="custom-list" style="margin-top: 8px;">
+              <li><strong>0–2 km (Premium SLA)</strong>: 8-12 min. Highly viable.</li>
+              <li><strong>2–4 km (Sweet Spot)</strong>: 15-22 min. High density households (~55,000).</li>
+              <li><strong>4–6 km (Marginal)</strong>: 25-40 min. Requires 3rd rider incentive.</li>
+              <li><strong>&gt;6 km (Unviable)</strong>: 40+ min delivery times, rejected at launch.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- GST Treatment & Inconsistencies -->
+      <div class="card">
+        <h3 class="sub-section-title">13 GST Treatment & 16 Inconsistencies</h3>
+        <div class="grid-2">
+          <div>
+            <strong>13 GST Treatment (Monthly at 60% Capacity):</strong>
+            <div class="table-container" style="margin-top: 8px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Component</th>
+                    <th>Monthly GST Flow (INR)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Output GST Collected from Customers (18%)</td>
+                    <td>Rs. 1,77,564</td>
+                  </tr>
+                  <tr>
+                    <td>Less: Input Tax Credit (ITC) on inputs</td>
+                    <td>Rs. (20,000)</td>
+                  </tr>
+                  <tr style="font-weight: bold; background-color: rgba(255,255,255,0.02);">
+                    <td>Net GST Payable to Government</td>
+                    <td>Rs. 1,57,564</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted);">
+              *GST is a cash-flow timing asset but never booked as core revenue. Restaurants must keep menu prices ex-GST, adding 18% at payment.
+            </p>
+          </div>
+
+          <div>
+            <strong>16 Reconciled Inconsistencies in Reference Model:</strong>
+            <ul class="custom-list" style="font-size: 12px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+              <li><strong style="color: var(--color-error);">CM Overstated</strong>: The reference model computed variable ingredient costs for 1 pizza while charging it against a 2-pizza average basket size.</li>
+              <li><strong style="color: var(--color-error);">Fixed Costs Labeling</strong>: Page-1 labels Rs.2.03L as "revenue at 60% capacity". This is actually the total monthly fixed costs. Actual revenue is Rs.11.73L.</li>
+              <li><strong style="color: var(--color-error);">Payback Timeline Contradiction</strong>: Assumes instant 60% capacity at launch (2-3 month payback), which contradicts the 18-month slow ramp-up schedule documented later.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage 1 Challenge Questions -->
+      <div class="card">
+        <h3 class="sub-section-title">17 Answers to Stage-1 Challenge Questions</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
+          <div>
+            <strong>Q1. Break-even if rent rises to Rs.70,000? At what rent is the model unviable?</strong>
+            <p style="color: var(--text-secondary); margin-top: 4px;">
+              Fixed costs increase to Rs.2,17,910. Break-even rises from 13 orders/day to ~14 orders/day (427/month). Rent is a low-sensitivity factor; rent is only unviable if it pushes fixed costs past the total contribution margin generated at planned capacity (Rs.7.2L/month, implying rent near Rs.5.7L/month).
+            </p>
+          </div>
+          <div>
+            <strong>Q2. 40% of orders via aggregator at 25% commission — new CM and break-even?</strong>
+            <p style="color: var(--text-secondary); margin-top: 4px;">
+              Aggregator order CM is Rs.339. The blended CM becomes <code>0.6 * 511 + 0.4 * 339 = Rs.442</code>. The new break-even point increases to <strong>15 orders/day</strong> (459/month).
+            </p>
+          </div>
+          <div>
+            <strong>Q3. At what volume is a 3rd rider justified?</strong>
+            <p style="color: var(--text-secondary); margin-top: 4px;">
+              Financially, under 1 extra order/day pays for a rider (Rs.16k wages / Rs.511 CM). Operationally, two riders saturate at 60-70 deliveries per day. A third rider is justified when daily volumes sustain <strong>&gt;55 orders/day</strong> to protect delivery SLAs.
+            </p>
+          </div>
+          <div>
+            <strong>Q4. Impact of the qty &gt;= 5 / 10% discount — value-driver or margin leak?</strong>
+            <p style="color: var(--text-secondary); margin-top: 4px;">
+              It cuts the order's contribution margin by ~14% (Rs.338.50). It is a value-driver only if it pulls average transaction sizes from 3-4 pizzas up to 5; otherwise, it is a leak. Rajan should nudge users ordering 4 pizzas to add 1 more to unlock savings.
+            </p>
+          </div>
+          <div>
+            <strong>Q5. COGS +12% inflation — how many extra daily orders to hold EBITDA?</strong>
+            <p style="color: var(--text-secondary); margin-top: 4px;">
+              Ingredient costs increase by Rs.36/order, lowering the CM to Rs.475. To maintain the baseline monthly EBITDA, the outlet must secure <strong>~3 extra orders/day</strong> (50 vs 47) or increase menu prices by Rs.36.
+            </p>
+          </div>
+          <div>
+            <strong>Q6. Three BI metrics from the database that improve profitability?</strong>
+            <p style="color: var(--text-secondary); margin-top: 4px;">
+              (1) <em>Peak-hour heatmaps</em> (FR-22) for staff scheduling. (2) <em>Topping attach-rates</em> (FR-17) for upselling higher margin items. (3) <em>Repeat ordering rates</em> by phone number to track aggregator-to-owned customer conversions.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--color-success); background-color: rgba(16, 185, 129, 0.01);">
+        <strong style="color: var(--color-success); font-family: 'Outfit'; font-size: 18px;">Bottom Line Summary</strong>
+        <p style="font-size: 14px; margin-top: 6px; color: var(--text-secondary);">
+          SliceMatic is a fundamentally healthy single-outlet QSR with ~60% contribution margins and a ~13/day break-even it clears comfortably at mature volumes. The reference model is directionally right but optimistic by ~26% on margin. The business's fate rests on two levers the digital ordering system is purpose-built to move: <strong>order volume</strong> and <strong>owned-channel mix</strong>. Build the system to protect both, and the economics take care of themselves.
+        </p>
+      </div>
+    </section>
+
+    <!-- ==================== INTERACTIVE SIMULATOR ==================== -->
+    <section id="simulator" class="page-section">
+      <div class="section-title">
+        <span>Interactive Unit Economics Simulator</span>
+      </div>
+
+      <div class="card">
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+          Adjust the sliders in the control panel to see in real-time how transaction volume, aggregator channel mix, ingredient costs, and rent shifts SliceMatic's monthly EBITDA, contribution margin, and break-even points.
+        </p>
+
+        <div class="simulator-container">
+          
+          <!-- CONTROL PANEL -->
+          <div class="sim-panel-controls">
+            <h3 style="font-size: 16px; margin-bottom: 12px; color: var(--accent-pink);">Input Variables</h3>
+            
+            <div class="control-group">
+              <label class="control-label" style="align-items: center;">
+                <span>Daily Orders</span>
+                <input type="number" class="control-input" id="val-orders" value="47" min="0" max="100">
+              </label>
+              <input type="range" class="sim-slider" id="slider-orders" min="0" max="100" value="47">
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" style="align-items: center;">
+                <span>Aggregator Mix (%)</span>
+                <input type="number" class="control-input" id="val-mix" value="40" min="0" max="100">
+              </label>
+              <input type="range" class="sim-slider" id="slider-mix" min="0" max="100" value="40">
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" style="align-items: center;">
+                <span>Average Order Value (Rs.)</span>
+                <input type="number" class="control-input" id="val-aov" value="847" min="400" max="1500">
+              </label>
+              <input type="range" class="sim-slider" id="slider-aov" min="400" max="1500" value="847" step="10">
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" style="align-items: center;">
+                <span>Aggregator Comm (%)</span>
+                <input type="number" class="control-input" id="val-comm" value="25" min="10" max="35">
+              </label>
+              <input type="range" class="sim-slider" id="slider-comm" min="10" max="35" value="25">
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" style="align-items: center;">
+                <span>Monthly Rent (Rs.)</span>
+                <input type="number" class="control-input" id="val-rent" value="55000" min="30000" max="120000" step="1000">
+              </label>
+              <input type="range" class="sim-slider" id="slider-rent" min="30000" max="120000" value="55000" step="5000">
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" style="align-items: center;">
+                <span>Ingredient Inflation (%)</span>
+                <input type="number" class="control-input" id="val-inflation" value="0" min="-20" max="50">
+              </label>
+              <input type="range" class="sim-slider" id="slider-inflation" min="-20" max="50" value="0" step="5">
+            </div>
+          </div>
+
+          <!-- RESULTS DASHBOARD -->
+          <div class="sim-panel-results">
+            
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <div class="meta-label">Monthly Fixed Costs</div>
+                <div class="metric-val" id="res-fixed">Rs. 2,02,910</div>
+              </div>
+              <div class="metric-box">
+                <div class="meta-label">Blended CM / Order</div>
+                <div class="metric-val" id="res-cm">Rs. 442</div>
+              </div>
+              <div class="metric-box">
+                <div class="meta-label">Break-Even / Day</div>
+                <div class="metric-val" id="res-be-day">~15.3</div>
+              </div>
+            </div>
+
+            <div class="stat-card" style="padding: 24px;">
+              <div class="stat-label">Projected Monthly EBITDA</div>
+              <div class="stat-number" id="res-ebitda" style="font-size: 48px; margin-bottom: 4px;">Rs. 4,20,600</div>
+              <span class="badge" id="res-status-badge">Healthy Operation</span>
+            </div>
+
+            <!-- VISUAL CHART -->
+            <div class="chart-container">
+              <div class="chart-header">
+                <strong style="font-size: 14px;">Financial Breakdown Analysis</strong>
+                <span style="font-size: 11px; color: var(--text-muted);">Values computed ex-GST (INR)</span>
+              </div>
+              
+              <div class="bar-chart">
+                <div class="bar-row">
+                  <div class="bar-label">Gross Revenue</div>
+                  <div class="bar-track">
+                    <div class="bar-fill" id="bar-rev-fill" style="width: 100%; background: var(--color-info);"></div>
+                  </div>
+                  <div class="bar-value" id="bar-rev-val">Rs. 0</div>
+                </div>
+
+                <div class="bar-row">
+                  <div class="bar-label">Total Variable Costs</div>
+                  <div class="bar-track">
+                    <div class="bar-fill" id="bar-var-fill" style="width: 0%; background: var(--color-warning);"></div>
+                  </div>
+                  <div class="bar-value" id="bar-var-val">Rs. 0</div>
+                </div>
+
+                <div class="bar-row">
+                  <div class="bar-label">Total Fixed Costs</div>
+                  <div class="bar-track">
+                    <div class="bar-fill" id="bar-fix-fill" style="width: 0%; background: var(--color-error);"></div>
+                  </div>
+                  <div class="bar-value" id="bar-fix-val">Rs. 0</div>
+                </div>
+
+                <div class="bar-row">
+                  <div class="bar-label">Operating EBITDA</div>
+                  <div class="bar-track">
+                    <div class="bar-fill" id="bar-ebitda-fill" style="width: 0%; background: var(--color-success);"></div>
+                  </div>
+                  <div class="bar-value" id="bar-ebitda-val">Rs. 0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PAYBACK CALCULATOR -->
+            <div class="card" style="margin-bottom: 0; padding: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                <span>Estimated Capital Payback Period (on Rs.15L investment):</span>
+                <strong id="res-payback" style="color: var(--accent-pink); font-size: 16px;">~18.0 months</strong>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- JAVASCRIPT FOR ROUTING AND SIMULATOR CALCULATIONS -->
+  <script>
+    // Tab switching router logic
+    const navItems = document.querySelectorAll('.nav-item');
+    const sections = document.querySelectorAll('.page-section');
+
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        // Remove active class from all nav items
+        navItems.forEach(nav => nav.classList.remove('active'));
+        // Add active class to clicked item
+        item.classList.add('active');
+
+        // Hide all sections
+        sections.forEach(sec => sec.classList.remove('active'));
+        // Show target section
+        const targetTab = item.getAttribute('data-tab');
+        document.getElementById(targetTab).classList.add('active');
+        
+        // Dynamically toggle light theme for all content pages except the cover page
+        if (targetTab === 'cover') {
+          document.body.classList.remove('theme-light');
+        } else {
+          document.body.classList.add('theme-light');
+        }
+        
+        // If switching to simulator, force a refresh of the calculations
+        if (targetTab === 'simulator') {
+          calculateSimulator('slider');
+        }
+      });
+    });
+
+    // SIMULATOR INPUTS & ALGORITHMS
+    const sOrders = document.getElementById('slider-orders');
+    const sMix = document.getElementById('slider-mix');
+    const sAov = document.getElementById('slider-aov');
+    const sComm = document.getElementById('slider-comm');
+    const sRent = document.getElementById('slider-rent');
+    const sInflation = document.getElementById('slider-inflation');
+
+    // Values selectors
+    const vOrders = document.getElementById('val-orders');
+    const vMix = document.getElementById('val-mix');
+    const vAov = document.getElementById('val-aov');
+    const vComm = document.getElementById('val-comm');
+    const vRent = document.getElementById('val-rent');
+    const vInflation = document.getElementById('val-inflation');
+
+    // Results selectors
+    const rFixed = document.getElementById('res-fixed');
+    const rCm = document.getElementById('res-cm');
+    const rBeDay = document.getElementById('res-be-day');
+    const rEbitda = document.getElementById('res-ebitda');
+    const rPayback = document.getElementById('res-payback');
+    const rStatusBadge = document.getElementById('res-status-badge');
+
+    // Bar chart fill bars
+    const barRevFill = document.getElementById('bar-rev-fill');
+    const barVarFill = document.getElementById('bar-var-fill');
+    const barFixFill = document.getElementById('bar-fix-fill');
+    const barEbitdaFill = document.getElementById('bar-ebitda-fill');
+
+    // Bar chart label values
+    const barRevVal = document.getElementById('bar-rev-val');
+    const barVarVal = document.getElementById('bar-var-val');
+    const barFixVal = document.getElementById('bar-fix-val');
+    const barEbitdaVal = document.getElementById('bar-ebitda-val');
+
+    function formatCurrency(amount) {
+      if (amount < 0) {
+        return '-Rs. ' + Math.abs(Math.round(amount)).toLocaleString('en-IN');
+      }
+      return 'Rs. ' + Math.round(amount).toLocaleString('en-IN');
+    }
+
+    function calculateSimulator(source) {
+      // 1. Get raw inputs (either from sliders or numeric entry boxes, syncing them bi-directionally)
+      let dailyOrders, aggMix, aov, aggCommRate, monthlyRent, inflation;
+
+      if (source === 'input') {
+        dailyOrders = Math.max(0, parseInt(vOrders.value) || 0);
+        aggMix = Math.max(0, Math.min(100, parseFloat(vMix.value) || 0)) / 100;
+        aov = Math.max(0, parseInt(vAov.value) || 0);
+        aggCommRate = Math.max(0, Math.min(100, parseFloat(vComm.value) || 0)) / 100;
+        monthlyRent = Math.max(0, parseInt(vRent.value) || 0);
+        inflation = (parseFloat(vInflation.value) || 0) / 100;
+
+        // Sync range sliders to typed numbers
+        sOrders.value = dailyOrders;
+        sMix.value = Math.round(aggMix * 100);
+        sAov.value = aov;
+        sComm.value = Math.round(aggCommRate * 100);
+        sRent.value = monthlyRent;
+        sInflation.value = Math.round(inflation * 100);
+      } else {
+        // source is slider or load
+        dailyOrders = parseInt(sOrders.value);
+        aggMix = parseInt(sMix.value) / 100;
+        aov = parseInt(sAov.value);
+        aggCommRate = parseInt(sComm.value) / 100;
+        monthlyRent = parseInt(sRent.value);
+        inflation = parseInt(sInflation.value) / 100;
+
+        // Sync edit boxes to dragged sliders
+        vOrders.value = dailyOrders;
+        vMix.value = Math.round(aggMix * 100);
+        vAov.value = aov;
+        vComm.value = Math.round(aggCommRate * 100);
+        vRent.value = monthlyRent;
+        vInflation.value = Math.round(inflation * 100);
+      }
+
+      // 2. Constants & Formula definitions from deep-dive
+      // Base salary, EMI, Utilities, and marketing total Rs.1,47,910 (excluding rent)
+      const baseOtherFixed = 147910; 
+      const totalFixedCosts = monthlyRent + baseOtherFixed;
+
+      // Ingredient base unit COGS = Rs.260 per 2-pizza basket, scales with inflation
+      const baseIngredientCogs = 260 * (1 + inflation);
+      const packagingCogs = 36 * (1 + inflation); // boxes scale similarly
+      const totalCogs = baseIngredientCogs + packagingCogs;
+
+      // Delivery and Payment gateway are charged once per order
+      const deliveryIncentive = 22;
+      const pgFee = aov * 0.018;
+
+      // CM calculations by channel
+      // Owned CM = AOV - Cogs - Delivery - PG
+      const ownedCM = aov - totalCogs - deliveryIncentive - pgFee;
+      // Aggregator CM = AOV - Commission - Cogs
+      const aggregatorCommission = aov * aggCommRate;
+      const aggregatorCM = aov - aggregatorCommission - totalCogs;
+
+      // Blended Contribution Margin
+      const blendedCM = (ownedCM * (1 - aggMix)) + (aggregatorCM * aggMix);
+
+      // Break-even orders
+      const breakEvenMonth = totalFixedCosts / blendedCM;
+      const breakEvenDay = breakEvenMonth / 30;
+
+      // Monthly aggregates
+      const monthlyOrders = dailyOrders * 30;
+      const monthlyGrossRevenue = monthlyOrders * aov;
+      const monthlyTotalCM = monthlyOrders * blendedCM;
+      const monthlyTotalVariable = monthlyGrossRevenue - monthlyTotalCM;
+      const monthlyEbitda = monthlyTotalCM - totalFixedCosts;
+
+      // Payback period (Initial investment: Rs.15L)
+      const investment = 1500000;
+      let paybackText = 'Infinite (Unviable)';
+      if (monthlyEbitda > 0) {
+        const months = investment / monthlyEbitda;
+        paybackText = '~' + months.toFixed(1) + ' months';
+      }
+
+      // 3. Render outputs
+      rFixed.textContent = formatCurrency(totalFixedCosts);
+      rCm.textContent = formatCurrency(blendedCM) + ' (' + ((blendedCM / aov) * 100).toFixed(1) + '%)';
+      rBeDay.textContent = isFinite(breakEvenDay) && breakEvenDay > 0 ? '~' + breakEvenDay.toFixed(1) : 'N/A';
+      rEbitda.textContent = formatCurrency(monthlyEbitda);
+      rPayback.textContent = paybackText;
+
+      // EBITDA styling & badges
+      if (monthlyEbitda < 0) {
+        rEbitda.className = 'metric-val red';
+        rStatusBadge.textContent = 'Operating at a Loss';
+        rStatusBadge.className = 'badge badge-error';
+      } else if (monthlyEbitda < 100000) {
+        rEbitda.className = 'metric-val';
+        rStatusBadge.textContent = 'Thin Margins / Break-Even';
+        rStatusBadge.className = 'badge badge-warning';
+      } else {
+        rEbitda.className = 'metric-val green';
+        rStatusBadge.textContent = 'Healthy Operation';
+        rStatusBadge.className = 'badge badge-success';
+      }
+
+      // 4. Update breakdown bar charts
+      // Normalize widths relative to Gross Revenue (always 100%)
+      if (monthlyGrossRevenue > 0) {
+        const varPercent = Math.max(0, Math.min(100, (monthlyTotalVariable / monthlyGrossRevenue) * 100));
+        const fixPercent = Math.max(0, Math.min(100, (totalFixedCosts / monthlyGrossRevenue) * 100));
+        const ebitdaPercent = Math.max(0, Math.min(100, (monthlyEbitda / monthlyGrossRevenue) * 100));
+
+        barRevFill.style.width = '100%';
+        barVarFill.style.width = varPercent + '%';
+        barFixFill.style.width = fixPercent + '%';
+        barEbitdaFill.style.width = (monthlyEbitda > 0 ? ebitdaPercent : 0) + '%';
+      } else {
+        // Zero orders state
+        barRevFill.style.width = '0%';
+        barVarFill.style.width = '0%';
+        barFixFill.style.width = '100%'; // Fixed costs are 100% of outflows
+        barEbitdaFill.style.width = '0%';
+      }
+
+      // Display numeric values next to charts
+      barRevVal.textContent = formatCurrency(monthlyGrossRevenue);
+      barVarVal.textContent = formatCurrency(monthlyTotalVariable);
+      barFixVal.textContent = formatCurrency(totalFixedCosts);
+      barEbitdaVal.textContent = formatCurrency(monthlyEbitda);
+    }
+
+    // Bind event listeners to sliders (source = 'slider')
+    const sliders = [sOrders, sMix, sAov, sComm, sRent, sInflation];
+    sliders.forEach(slider => {
+      slider.addEventListener('input', () => calculateSimulator('slider'));
+    });
+
+    // Bind event listeners to numeric inputs (source = 'input')
+    const numericInputs = [vOrders, vMix, vAov, vComm, vRent, vInflation];
+    numericInputs.forEach(input => {
+      input.addEventListener('input', () => calculateSimulator('input'));
+    });
+
+    // Run first calculation on load
+    window.addEventListener('DOMContentLoaded', () => calculateSimulator('slider'));
+  </script>
+</body>
+</html>
