@@ -1641,18 +1641,67 @@
         </p>
       </div>
 
-      <!-- A.6 & A.7 Non-Functional & Acceptance Criteria -->
+      <!-- A.6 Non-Functional Requirements & Graceful Failure Modes -->
       <div class="card">
-        <h3 class="sub-section-title">A.6 Non-Functional Requirements & A.7 Acceptance Criteria</h3>
-        <div style="font-size: 13px;">
-          <strong>Input Validation Rules:</strong>
-          <ul>
-            <li>Name: Regex <code>^[A-Za-z ]{2,40}$</code> after strip(). No numbers allowed.</li>
-            <li>Phone: Regex <code>^[6-9][0-9]{9}$</code> (must be a valid 10-digit Indian mobile number).</li>
-            <li>Quantity: Must parse as integer; reject floats ('2.5'), non-numerics ('three'), 0, or &gt;10.</li>
-            <li>Menu selection: Must be integer within <code>1..len(menu)</code>.</li>
-          </ul>
+        <h3 class="sub-section-title">A.6 Non-Functional Requirements & Graceful Failure Modes</h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; font-size: 13px;">
+          <!-- Left Column: Validation & Quality Attributes -->
+          <div>
+            <strong style="color: var(--accent-pink); display: block; margin-bottom: 8px;">A.6.1 Input Validation Rules</strong>
+            <ul class="custom-list" style="padding-left: 0; margin-bottom: 16px;">
+              <li><strong>Name Regex</strong>: <code>^[A-Za-z ]{2,40}$</code> evaluated post <code>strip()</code>. Rejects empty inputs, spaces-only, or numerical characters.</li>
+              <li><strong>Phone Regex</strong>: <code>^[6-9][0-9]{9}$</code>. Enforces a valid 10-digit Indian mobile phone number.</li>
+              <li><strong>Quantity Limits</strong>: Must parse as integer; reject floats (e.g., '2.5'), non-numerics ('three'), 0, or values &gt;10.</li>
+              <li><strong>Selection Boundaries</strong>: Must evaluate to an integer within range <code>1..len(menu)</code>.</li>
+            </ul>
+
+            <strong style="color: var(--accent-purple); display: block; margin-bottom: 8px;">A.6.2 System Quality Attributes (NFRs)</strong>
+            <ul style="padding-left: 20px; list-style-type: circle;">
+              <li><strong>Performance & Latency</strong>: Initial menu load from DB under 1.5s. Order processing transitions to invoice under 1s. OpenRouter query caps at 5s.</li>
+              <li><strong>Concurrency & Scale</strong>: Stage 3 database transactional isolation supports up to 100 simultaneous checkouts without locking.</li>
+              <li><strong>Security & Privacy</strong>: All client-to-server communications encrypted via HTTPS/TLS 1.3. Admin dashboard protected by Supabase JWT checks.</li>
+              <li><strong>Uptime & Availability</strong>: Vercel-hosted deployment guarantees a 99.9% uptime SLA. Daily DB backups in Supabase.</li>
+              <li><strong>Mobile Accessibility</strong>: Interface designed mobile-first (85%+ orders), with minimum button tap targets of 44x44px.</li>
+            </ul>
+          </div>
+
+          <!-- Right Column: Graceful Failure Modes -->
+          <div>
+            <strong style="color: var(--color-warning); display: block; margin-bottom: 8px;">A.6.3 Graceful Failure Modes (Resilience Specifications)</strong>
+            <div style="background-color: rgba(255,255,255,0.015); border: 1px dashed var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+              <div>
+                <strong>Missing menu file at startup</strong><br>
+                <span style="color: var(--text-muted);">Action</span>: Show a clear error popup detailing which specific file is missing, and exit the application before prompting any user intake fields.
+              </div>
+              <div>
+                <strong>Malformed menu data line</strong><br>
+                <span style="color: var(--text-muted);">Action</span>: Skip the malformed line (missing fields or non-numeric price), load the remaining valid lines, and print a warning in system logs.
+              </div>
+              <div>
+                <strong>Empty menu after parsing</strong><br>
+                <span style="color: var(--text-muted);">Action</span>: Refuse to start the ordering engine; alert the operator with which menu file has zero records.
+              </div>
+              <div>
+                <strong>Absent orders log file</strong><br>
+                <span style="color: var(--text-muted);">Action</span>: On first launch, if <code>orders_log.txt</code> is missing, automatically initialize and create the file, then proceed to process transactions normally.
+              </div>
+              <div>
+                <strong>Order log write failure</strong><br>
+                <span style="color: var(--text-muted);">Action</span>: If a local write is blocked, confirm order completion to the customer, prompt a warnings alert to the operator, and avoid crashing the app.
+              </div>
+              <div>
+                <strong>OpenRouter recommendation API failure</strong><br>
+                <span style="color: var(--text-muted);">Action</span>: Never block the ordering intake. Immediately trigger the 3-second fallback prompt card and load the manual menu selection options (FR-19).
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <!-- A.7 Acceptance Criteria -->
+      <div class="card">
+        <h3 class="sub-section-title">A.7 Acceptance Criteria (Given / When / Then)</h3>
 
         <div class="table-container" style="margin-top: 16px;">
           <table>
@@ -1776,7 +1825,7 @@
             <summary>Boundary Conditions (Item limits & thresholds)</summary>
             <div class="details-content">
               <ul>
-                <li><strong>Quantity = 1 vs Quantity = 10</strong>: Both quantities are accepted. Quantity 10 does not trigger the discount threshold (FR-9 requires Qty &gt;= 5). Quantity 11 is rejected.</li>
+                <li><strong>Quantity = 1 vs Quantity = 10</strong>: Both accepted. Quantity 10 triggers the 10% discount threshold (since 10 is &gt;= 5). Quantity 11 is rejected.</li>
                 <li><strong>Quantity = 5 exactly</strong>: Triggers the 10% discount logic. Subtotal line item details the exact post-discount calculation.</li>
                 <li><strong>Menu Selection indexes</strong>: Entering selection 1 or N (last item) succeeds. Selection 0 or N+1 fails.</li>
               </ul>
@@ -1825,71 +1874,105 @@
       </div>
 
       <div class="card">
-        <h3 class="sub-section-title">A.13 Cost vs Value Analysis & A.15 version History</h3>
-        <div class="grid-2" style="font-size: 13px;">
+        <h3 class="sub-section-title">A.13 Cost vs Value Analysis</h3>
+        <div class="grid-2" style="font-size: 13px; margin-bottom: 16px;">
+          <!-- Left Column: Costs -->
           <div>
-            <strong>Estimated Build Effort:</strong>
-            <table>
+            <strong style="color: var(--color-error); display: block; margin-bottom: 8px;">1. Development & Operational Cost Breakdown</strong>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">
+              The system's cost model divides capital expenditures (development) from operational expenditures (hosting and APIs):
+            </p>
+            <table style="margin-top: 0;">
               <thead>
                 <tr>
-                  <th>Stage</th>
-                  <th>Scope</th>
-                  <th>Effort</th>
+                  <th>Phase / Service</th>
+                  <th>Detail & Scope</th>
+                  <th>Cost / Effort</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>Stage 1</td>
-                  <td>PRD + Economics</td>
-                  <td>8–12 hrs</td>
+                  <td><strong>Upfront Development</strong></td>
+                  <td>100 hrs of engineering @ Rs.1,500/hr (Stage 1-3)</td>
+                  <td>Rs. 1,50,000</td>
                 </tr>
                 <tr>
-                  <td>Stage 2</td>
-                  <td>Gradio MVP logic</td>
-                  <td>20–28 hrs</td>
+                  <td><strong>Supabase Database</strong></td>
+                  <td>Pro Tier (persistent DB, backups, auth)</td>
+                  <td>Rs. 2,100 / mo ($25)</td>
                 </tr>
                 <tr>
-                  <td>Stage 3</td>
-                  <td>Supabase, Admin dashboard, OpenRouter</td>
-                  <td>45–60 hrs</td>
+                  <td><strong>Vercel Frontend</strong></td>
+                  <td>Hosting for production React/HTML build</td>
+                  <td>Rs. 1,680 / mo ($20)</td>
                 </tr>
-                <tr style="font-weight: bold;">
-                  <td>Total</td>
-                  <td>Full Product Delivery</td>
-                  <td>75-100 hrs</td>
+                <tr>
+                  <td><strong>OpenRouter LLM API</strong></td>
+                  <td>Mistral 7B (approx. 10k queries @ Rs.0.10/call)</td>
+                  <td>Rs. 1,000 / mo</td>
+                </tr>
+                <tr style="font-weight: bold; border-top: 2px solid var(--border-color);">
+                  <td>Total Monthly OpEx</td>
+                  <td>Running SaaS fees</td>
+                  <td>Rs. 4,780 / mo</td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- Right Column: Value -->
           <div>
-            <strong>Document Revision History:</strong>
-            <table>
+            <strong style="color: var(--color-success); display: block; margin-bottom: 8px;">2. Projected Monthly Financial Return</strong>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">
+              The digital ordering platform acts as a multiplier by cutting fixed labor costs and recovering lost sales:
+            </p>
+            <table style="margin-top: 0;">
               <thead>
                 <tr>
-                  <th>Ver</th>
-                  <th>Date</th>
-                  <th>Core Changes</th>
+                  <th>Value Driver</th>
+                  <th>Mathematical Projection</th>
+                  <th>Monthly Impact</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>v0.1</td>
-                  <td>2026-06-23</td>
-                  <td>Initial draft for Stage 2 MVP.</td>
+                  <td><strong>Labor Savings</strong></td>
+                  <td>Counter staff redundancy (self-serve digital intake)</td>
+                  <td style="color: var(--color-success);">+Rs. 18,000</td>
                 </tr>
                 <tr>
-                  <td>v0.2</td>
-                  <td>2026-06-24</td>
-                  <td>Added Given-When-Then tables and edge cases.</td>
+                  <td><strong>Lost Order Recovery</strong></td>
+                  <td>Recovering ~5 peak orders/day @ Rs.511 margin</td>
+                  <td style="color: var(--color-success);">+Rs. 76,650</td>
                 </tr>
-                <tr style="color: var(--accent-pink);">
-                  <td>v0.3</td>
-                  <td>2026-06-24</td>
-                  <td>Expanded to Stage 3 Supabase & AI specs.</td>
+                <tr>
+                  <td><strong>AI Toppings Upsell</strong></td>
+                  <td>15% acceptance rate raising topping attach values</td>
+                  <td style="color: var(--color-success);">+Rs. 35,000</td>
+                </tr>
+                <tr>
+                  <td><strong>Error Elimination</strong></td>
+                  <td>Deterministic calculations remove billing refunds</td>
+                  <td style="color: var(--color-success);">+Rs. 5,000</td>
+                </tr>
+                <tr style="font-weight: bold; border-top: 2px solid var(--border-color);">
+                  <td>Total Gross Return</td>
+                  <td>Incremental cash inflow delta</td>
+                  <td style="color: var(--color-success);">+Rs. 1,34,650</td>
                 </tr>
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div class="inconsistency-callout" style="border-color: var(--color-success); background-color: rgba(16, 185, 129, 0.03); margin-top: 16px; margin-bottom: 0;">
+          <div class="inconsistency-title" style="color: var(--color-success);">
+            <span class="badge badge-success">ROI</span> Return on Investment (ROI) Summary
+          </div>
+          <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+            Subtracting running OpEx (Rs. 4,780) from Gross Return (Rs. 1,34,650) yields a <strong>Net Monthly Value added of Rs. 1,29,870</strong>. 
+            Against the upfront Rs. 1,50,000 development cost, the digital system pays for itself in just **1.2 months** ($1,50,000 \div 1,29,870$), presenting an exceptional financial return.
+          </p>
         </div>
       </div>
 
