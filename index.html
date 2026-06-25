@@ -785,12 +785,12 @@
     .moscow-card.could::before { background-color: var(--color-info); }
     .moscow-card.could h3 { color: var(--color-info); }
 
-    .moscow-card.would {
+    .moscow-card.wont {
       background-color: rgba(113, 113, 122, 0.02);
       border-color: rgba(113, 113, 122, 0.15);
     }
-    .moscow-card.would::before { background-color: var(--text-muted); }
-    .moscow-card.would h3 { color: var(--text-muted); }
+    .moscow-card.wont::before { background-color: var(--text-muted); }
+    .moscow-card.wont h3 { color: var(--text-muted); }
 
     .moscow-title {
       font-size: 20px;
@@ -1076,7 +1076,7 @@
     body.theme-light .moscow-card.must { background-color: #fff5f5; border-color: rgba(239, 68, 68, 0.25); }
     body.theme-light .moscow-card.should { background-color: #faf5ff; border-color: rgba(157, 78, 221, 0.25); }
     body.theme-light .moscow-card.could { background-color: #f0f9ff; border-color: rgba(14, 165, 233, 0.25); }
-    body.theme-light .moscow-card.would { background-color: #f4f4f5; border-color: rgba(113, 113, 122, 0.25); }
+    body.theme-light .moscow-card.wont { background-color: #f4f4f5; border-color: rgba(113, 113, 122, 0.25); }
 
     /* Simulator Controls in Light Theme overrides */
     body.theme-light .sim-panel-controls {
@@ -1120,6 +1120,95 @@
 
     body.theme-light details[open] {
       border-color: var(--border-accent) !important;
+    }
+
+    /* PRINT-TO-PDF STYLING RULES (Cmd+P) */
+    @media print {
+      /* Hide navigation sidebar and script controllers */
+      .sidebar {
+        display: none !important;
+      }
+      
+      /* Reset main margin to fill the paper */
+      .main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+        background-color: #f5f5f7 !important;
+        color: #18181b !important;
+        display: block !important;
+      }
+      
+      /* Force all sections to display sequentially for print */
+      .page-section {
+        display: block !important;
+        opacity: 1 !important;
+        transform: none !important;
+        page-break-after: always;
+        margin-bottom: 40px;
+      }
+      
+      /* Format page elements */
+      .card {
+        background-color: #ffffff !important;
+        border: 1px solid rgba(0, 0, 0, 0.08) !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+      }
+      
+      .table-container {
+        border-color: rgba(0, 0, 0, 0.08) !important;
+        page-break-inside: avoid;
+      }
+      
+      table {
+        color: #111827 !important;
+      }
+      
+      th {
+        background-color: #f4f4f5 !important;
+        color: #18181b !important;
+      }
+      
+      td {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+      }
+      
+      /* Force background colors to show in PDF prints */
+      body {
+        background-color: #f5f5f7 !important;
+        color: #18181b !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      /* Keep the first page (cover) dark style */
+      #cover {
+        background-color: #09090b !important;
+        color: #f4f4f5 !important;
+        min-height: 100vh;
+        padding: 60px;
+      }
+      
+      #cover h1, #cover div, #cover span, #cover strong, #cover .brand-name {
+        color: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      
+      #cover .stat-card {
+        background-color: #0e0e11 !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+      }
+      
+      /* Avoid breaking MoSCoW elements inside pages */
+      .moscow-card, .inconsistency-callout, .flow-diagram {
+        page-break-inside: avoid;
+      }
+      
+      .sim-panel-controls {
+        background-color: #ffffff !important;
+        page-break-inside: avoid;
+      }
     }
   </style>
 </head>
@@ -1171,7 +1260,7 @@
 
     <div class="sidebar-footer">
       <p>FDE Applied Project</p>
-      <p>PizzaFlow · Batch 2487</p>
+      <p>PizzaFlow</p>
       <p>Version 1.0 (Unified)</p>
     </div>
   </aside>
@@ -1224,7 +1313,7 @@
           </div>
         </div>
 
-        <div class="cover-metadata">
+        <div class="cover-metadata" style="flex-wrap: wrap;">
           <div class="meta-item">
             <span class="meta-label">Outlet Location</span>
             <span class="meta-value">New Ashok Nagar, Delhi</span>
@@ -1236,6 +1325,12 @@
           <div class="meta-item">
             <span class="meta-label">Revision Date</span>
             <span class="meta-value">June 25, 2026</span>
+          </div>
+          <div class="meta-item" style="width: 100%; margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <span class="meta-label">Group Members</span>
+            <span class="meta-value" style="color: var(--accent-pink);">
+              Varsha Sathya · Somil Johari · Shubham Gupta · Ratnesh Kumar · Vishwanath Doddamani · Harsh Singhi
+            </span>
           </div>
         </div>
       </div>
@@ -1794,8 +1889,8 @@
             </div>
           </div>
 
-          <div class="moscow-card would">
-            <h3 class="moscow-title">WOULD HAVE (Deferred / Out-of-Scope)</h3>
+          <div class="moscow-card wont">
+            <h3 class="moscow-title">WON'T HAVE (Deferred / Out-of-Scope)</h3>
             <div class="moscow-content">
               <ul>
                 <li><strong>Real Payments Integration</strong>: UPI, card tokenisation, or payment gateways are deferred. UI supports cash, card, and UPI selections as confirmation modes only.</li>
