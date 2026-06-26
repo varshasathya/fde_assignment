@@ -97,13 +97,11 @@ MENU_MARKDOWN = generate_menu_markdown()
 # -------------------------------------------------------------
 LOG_FILE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "orders_log.txt")
 
-def append_order_to_log(timestamp, name, phone, base, pizza, topping, qty, subtotal, discount, gst, total, pay_mode):
+def append_order_to_log(timestamp, name, phone, pizzas_str, qty, subtotal, discount, gst, total, pay_mode):
     """Appends order record to flat log file. Handles writes blocks gracefully."""
     log_line = (
         f"{timestamp} | {name} | {phone} | "
-        f"Base:{base['name']}@{int(base['price'])} | "
-        f"Pizza:{pizza['name']}@{int(pizza['price'])} | "
-        f"Topping:{topping['name']}@{int(topping['price'])} | "
+        f"{pizzas_str} | "
         f"Qty:{qty} | Subtotal:{subtotal:.2f} | "
         f"Discount:{discount:.2f} | GST:{gst:.2f} | "
         f"Total:{total:.2f} | Pay:{pay_mode}\n\n"
@@ -146,7 +144,7 @@ def resolve_selection(raw_val, items_list):
         
     return None
 
-def process_order(name, phone, qty_raw, base_sel_raw, pizza_sel_raw, topping_sel_raw, pay_mode):
+def process_order(name, phone, qty_raw, pay_mode, *pizza_details):
     """Validates inputs, processes calculations, and writes sales logs.
     Returns success HTML invoice or structured validation error block.
     """
@@ -169,19 +167,7 @@ def process_order(name, phone, qty_raw, base_sel_raw, pizza_sel_raw, topping_sel
     # 3. Validate Quantity Selection (FR-4)
     qty_val = None
     try:
-        # Gradio inputs can pass as strings or float sliders; parse to int
-        if isinstance(qty_raw, str):
-            if '.' in qty_raw:
-                # Reject floats
-                errors.append("Quantity must be a whole number from 1 to 10.")
-            else:
-                qty_val = int(qty_raw)
-        else:
-            # Numeric slider input
-            if float(qty_raw) != int(qty_raw):
-                errors.append("Quantity must be a whole number from 1 to 10.")
-            else:
-                qty_val = int(qty_raw)
+        qty_val = int(qty_raw)
     except (ValueError, TypeError):
         errors.append("Quantity must be a whole number from 1 to 10.")
         
@@ -192,18 +178,31 @@ def process_order(name, phone, qty_raw, base_sel_raw, pizza_sel_raw, topping_sel
             else:
                 errors.append("Quantity must be a whole number from 1 to 10.")
 
-    # 4. Resolve and Validate selections (from dropdown value or fallback index)
-    selected_base = resolve_selection(base_sel_raw, BASES)
-    if not selected_base:
-        errors.append("Please select a Crust Base Choice.")
-        
-    selected_pizza = resolve_selection(pizza_sel_raw, PIZZAS)
-    if not selected_pizza:
-        errors.append("Please select a Pizza Choice.")
-        
-    selected_topping = resolve_selection(topping_sel_raw, TOPPINGS)
-    if not selected_topping:
-        errors.append("Please select an Add-on Topping.")
+    # 4. Resolve and Validate selections for each active pizza slot
+    parsed_items = []
+    if qty_val is not None and 1 <= qty_val <= 10:
+        for idx in range(1, qty_val + 1):
+            base_idx = (idx - 1) * 3
+            pizza_idx = (idx - 1) * 3 + 1
+            topping_idx = (idx - 1) * 3 + 2
+            
+            b_raw = pizza_details[base_idx] if base_idx < len(pizza_details) else None
+            p_raw = pizza_details[pizza_idx] if pizza_idx < len(pizza_details) else None
+            t_raw = pizza_details[topping_idx] if topping_idx < len(pizza_details) else None
+            
+            selected_base = resolve_selection(b_raw, BASES)
+            selected_pizza = resolve_selection(p_raw, PIZZAS)
+            selected_topping = resolve_selection(t_raw, TOPPINGS)
+            
+            if not selected_base:
+                errors.append(f"Pizza #{idx}: Please select a Crust Base Choice.")
+            if not selected_pizza:
+                errors.append(f"Pizza #{idx}: Please select a Pizza Choice.")
+            if not selected_topping:
+                errors.append(f"Pizza #{idx}: Please select an Add-on Topping.")
+                
+            if selected_base and selected_pizza and selected_topping:
+                parsed_items.append((selected_base, selected_pizza, selected_topping))
 
     # Render error messages in a styled container if validation fails
     if errors:
@@ -215,10 +214,20 @@ def process_order(name, phone, qty_raw, base_sel_raw, pizza_sel_raw, topping_sel
         return error_html, "<div style='text-align: center; color: gray; margin-top: 40px;'>Receipt will be generated here upon order validation.</div>"
 
     # 5. Core Pricing Calculations
+    subtotal = 0.0
+    item_details_list = []
     
-    unit_price = selected_base['price'] + selected_pizza['price'] + selected_topping['price']
-    subtotal = unit_price * qty_val
-    
+    for idx, (sb, sp, st) in enumerate(parsed_items, 1):
+        pizza_unit_price = sb['price'] + sp['price'] + st['price']
+        subtotal += pizza_unit_price
+        item_details_list.append({
+            "index": idx,
+            "base": sb,
+            "pizza": sp,
+            "topping": st,
+            "unit_price": pizza_unit_price
+        })
+        
     # Auto-apply 10% discount when qty >= 5 (FR-9)
     discount = 0.0
     if qty_val >= 5:
@@ -230,9 +239,20 @@ def process_order(name, phone, qty_raw, base_sel_raw, pizza_sel_raw, topping_sel
     
     # 6. Persistent Write to Logs
     timestamp = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    
+    # Helper to construct details for the log line
+    log_parts = []
+    for item in item_details_list:
+        log_parts.append(
+            f"Pizza{item['index']}:"
+            f"Base:{item['base']['name']}@{int(item['base']['price'])}/"
+            f"Pizza:{item['pizza']['name']}@{int(item['pizza']['price'])}/"
+            f"Topping:{item['topping']['name']}@{int(item['topping']['price'])}"
+        )
+    pizzas_str = " | ".join(log_parts)
+    
     write_success = append_order_to_log(
-        timestamp, name_stripped, phone_stripped, 
-        selected_base, selected_pizza, selected_topping, 
+        timestamp, name_stripped, phone_stripped, pizzas_str, 
         qty_val, subtotal, discount, gst, net_payable, pay_mode
     )
 
@@ -254,6 +274,28 @@ def process_order(name, phone, qty_raw, base_sel_raw, pizza_sel_raw, topping_sel
         </div>
         """
 
+    # Build the itemized list in the invoice
+    pizza_items_html = ""
+    for item in item_details_list:
+        pizza_items_html += f"""
+        <div style="font-weight: bold; font-size: 11px; margin-top: 8px; color: #ff007f; text-decoration: underline;">Pizza #{item['index']}</div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-left: 8px; margin-top: 2px;">
+          <span>{item['base']['name']}</span>
+          <span>Rs. {item['base']['price']:.2f}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-left: 8px;">
+          <span>{item['pizza']['name']}</span>
+          <span>Rs. {item['pizza']['price']:.2f}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; margin-left: 8px; margin-bottom: 2px;">
+          <span>{item['topping']['name']}</span>
+          <span>Rs. {item['topping']['price']:.2f}</span>
+        </div>
+        <div style="text-align: right; font-size: 10px; font-weight: bold; opacity: 0.85; margin-bottom: 6px;">
+          Subtotal: Rs. {item['unit_price']:.2f}
+        </div>
+        """
+
     invoice_html = f"""
     <div style="background-color: #ffffff; border: 1px dashed rgba(0, 0, 0, 0.18); border-radius: 12px; padding: 24px; font-family: monospace; color: #1f2937; max-width: 360px; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
       <div style="text-align: center; margin-bottom: 16px;">
@@ -270,28 +312,12 @@ def process_order(name, phone, qty_raw, base_sel_raw, pizza_sel_raw, topping_sel
       </div>
       <div style="border-top: 1px dashed rgba(0, 0, 0, 0.15); margin: 12px 0;"></div>
       
-      <div style="display: flex; justify-content: space-between; font-size: 12px;">
-        <span>{qty_val}x {selected_base['name']}</span>
-        <span>Rs. {selected_base['price'] * qty_val:.2f}</span>
-      </div>
-      <div style="font-size: 9px; opacity: 0.6; margin-left: 10px; margin-bottom: 6px;">(Unit: Rs. {selected_base['price']:.2f})</div>
-      
-      <div style="display: flex; justify-content: space-between; font-size: 12px;">
-        <span>{qty_val}x {selected_pizza['name']}</span>
-        <span>Rs. {selected_pizza['price'] * qty_val:.2f}</span>
-      </div>
-      <div style="font-size: 9px; opacity: 0.6; margin-left: 10px; margin-bottom: 6px;">(Unit: Rs. {selected_pizza['price']:.2f})</div>
-      
-      <div style="display: flex; justify-content: space-between; font-size: 12px;">
-        <span>{qty_val}x {selected_topping['name']}</span>
-        <span>Rs. {selected_topping['price'] * qty_val:.2f}</span>
-      </div>
-      <div style="font-size: 9px; opacity: 0.6; margin-left: 10px; margin-bottom: 6px;">(Unit: Rs. {selected_topping['price']:.2f})</div>
+      {pizza_items_html}
       
       <div style="border-top: 1px dashed rgba(0, 0, 0, 0.15); margin: 12px 0;"></div>
       
       <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
-        <span>SUBTOTAL</span>
+        <span>SUBTOTAL ({qty_val} Pizzas)</span>
         <span>Rs. {subtotal:.2f}</span>
       </div>
       {discount_line}
@@ -344,10 +370,21 @@ with gr.Blocks() as demo:
             BASE_CHOICES = [f"{item['name']} - Rs. {int(item['price'])}" for item in BASES]
             PIZZA_CHOICES = [f"{item['name']} - Rs. {int(item['price'])}" for item in PIZZAS]
             TOPPING_CHOICES = [f"{item['name']} - Rs. {int(item['price'])}" for item in TOPPINGS]
-            
-            c_base = gr.Dropdown(choices=BASE_CHOICES, label="Crust Base Choice")
-            c_pizza = gr.Dropdown(choices=PIZZA_CHOICES, label="Pizza Choice")
-            c_topping = gr.Dropdown(choices=TOPPING_CHOICES, label="Add-on Topping")
+
+            row_components = []
+            pizza_inputs = []
+
+            # Dynamically build 10 pizza slot rows, mapping visibility initially to row 1 only
+            for i in range(1, 11):
+                is_visible = (i == 1)
+                with gr.Group(visible=is_visible) as r_grp:
+                    gr.Markdown(f"#### 🍕 Pizza #{i}")
+                    with gr.Row():
+                        b_sel = gr.Dropdown(choices=BASE_CHOICES, label="Crust Base")
+                        p_sel = gr.Dropdown(choices=PIZZA_CHOICES, label="Pizza Choice")
+                        t_sel = gr.Dropdown(choices=TOPPING_CHOICES, label="Add-on Topping")
+                    row_components.append(r_grp)
+                    pizza_inputs.extend([b_sel, p_sel, t_sel])
             
             gr.Markdown("---")
             c_pay = gr.Dropdown(choices=["Cash", "Card", "UPI"], value="Cash", label="Payment Mode Selection")
@@ -365,10 +402,21 @@ with gr.Blocks() as demo:
             with gr.Tab("Invoice Bill Receipt"):
                 out_receipt = gr.HTML(value="<div style='text-align: center; color: gray; margin-top: 40px;'>Receipt will be generated here upon order validation.</div>")
                 
+    # Slider Quantity Change visibility mapping
+    def update_rows_visibility(qty):
+        qty_val = int(qty)
+        return [gr.Group(visible=(i < qty_val)) for i in range(10)]
+
+    c_qty.change(
+        fn=update_rows_visibility,
+        inputs=[c_qty],
+        outputs=row_components
+    )
+
     # Event mapping
     btn_order.click(
         fn=process_order,
-        inputs=[c_name, c_phone, c_qty, c_base, c_pizza, c_topping, c_pay],
+        inputs=[c_name, c_phone, c_qty, c_pay] + pizza_inputs,
         outputs=[out_error, out_receipt]
     )
 

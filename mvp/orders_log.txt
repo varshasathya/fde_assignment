@@ -12,3 +12,9 @@
 
 2026-06-26T10:56:03 | rajan sharma | 7676452323 | Base:Thin Crust@149 | Pizza:Margherita@299 | Topping:Black Olives@49 | Qty:2 | Subtotal:994.00 | Discount:0.00 | GST:178.92 | Total:1172.92 | Pay:Cash
 
+2026-06-26T10:59:23 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:1 | Subtotal:677.00 | Discount:0.00 | GST:121.86 | Total:798.86 | Pay:Cash
+
+2026-06-26T10:59:23 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza2:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza3:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza4:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza5:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:5 | Subtotal:3385.00 | Discount:338.50 | GST:548.37 | Total:3594.87 | Pay:Cash
+
+2026-06-26T11:00:53 | rajan sharma | 9876765623 | Pizza1:Base:Thin Crust@149/Pizza:Margherita@299/Topping:Black Olives@49 | Pizza2:Base:Thin Crust@149/Pizza:Pepperoni Classic@369/Topping:Button Mushrooms@49 | Pizza3:Base:Cheese Burst@229/Pizza:Farm House@319/Topping:Peri-Peri Drizzle@59 | Qty:3 | Subtotal:1671.00 | Discount:0.00 | GST:300.78 | Total:1971.78 | Pay:Cash
+
