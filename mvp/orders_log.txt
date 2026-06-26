@@ -1,0 +1,14 @@
+2026-06-26T10:39:27 | Rajan Sharma | 9876543210 | Base:Cheese Burst@229 | Pizza:BBQ Chicken@379 | Topping:Extra Cheese@69 | Qty:1 | Subtotal:677.00 | Discount:0.00 | GST:121.86 | Total:798.86 | Pay:Cash
+
+2026-06-26T10:39:27 | Rajan Sharma | 9876543210 | Base:Cheese Burst@229 | Pizza:BBQ Chicken@379 | Topping:Extra Cheese@69 | Qty:5 | Subtotal:3385.00 | Discount:338.50 | GST:548.37 | Total:3594.87 | Pay:Cash
+
+2026-06-26T10:40:07 | Rajan Sharma | 9876543210 | Base:Cheese Burst@229 | Pizza:BBQ Chicken@379 | Topping:Extra Cheese@69 | Qty:1 | Subtotal:677.00 | Discount:0.00 | GST:121.86 | Total:798.86 | Pay:Cash
+
+2026-06-26T10:40:07 | Rajan Sharma | 9876543210 | Base:Cheese Burst@229 | Pizza:BBQ Chicken@379 | Topping:Extra Cheese@69 | Qty:5 | Subtotal:3385.00 | Discount:338.50 | GST:548.37 | Total:3594.87 | Pay:Cash
+
+2026-06-26T10:53:26 | Rajan Sharma | 9876543210 | Base:Cheese Burst@229 | Pizza:BBQ Chicken@379 | Topping:Extra Cheese@69 | Qty:1 | Subtotal:677.00 | Discount:0.00 | GST:121.86 | Total:798.86 | Pay:Cash
+
+2026-06-26T10:53:26 | Rajan Sharma | 9876543210 | Base:Cheese Burst@229 | Pizza:BBQ Chicken@379 | Topping:Extra Cheese@69 | Qty:5 | Subtotal:3385.00 | Discount:338.50 | GST:548.37 | Total:3594.87 | Pay:Cash
+
+2026-06-26T10:56:03 | rajan sharma | 7676452323 | Base:Thin Crust@149 | Pizza:Margherita@299 | Topping:Black Olives@49 | Qty:2 | Subtotal:994.00 | Discount:0.00 | GST:178.92 | Total:1172.92 | Pay:Cash
+
