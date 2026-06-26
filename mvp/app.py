@@ -72,25 +72,62 @@ BASES = load_menu_file(BASE_FILE, "Bases Crust")
 PIZZAS = load_menu_file(PIZZA_FILE, "Pizza Choices")
 TOPPINGS = load_menu_file(TOPPING_FILE, "Add-on Toppings")
 
-# Create Menu Display markdown lists
-def generate_menu_markdown():
-    md = "### 🍕 SliceMatic Digital Menu\n\n"
+# Create Menu Display HTML tables
+def generate_menu_html():
+    html = "<div style='font-family: sans-serif; color: #1f2937;'>"
     
-    md += "#### 1. Pizza Crust Bases\n"
-    for i, base in enumerate(BASES, 1):
-        md += f"**{i}**. {base['name']} - Rs. {int(base['price'])}\n"
-        
-    md += "\n#### 2. Classic Pizzas\n"
-    for i, pizza in enumerate(PIZZAS, 1):
-        md += f"**{i}**. {pizza['name']} - Rs. {int(pizza['price'])}\n"
-        
-    md += "\n#### 3. Fresh Add-on Toppings\n"
-    for i, topping in enumerate(TOPPINGS, 1):
-        md += f"**{i}**. {topping['name']} - Rs. {int(topping['price'])}\n"
-        
-    return md
+    # 1. Bases crust table
+    html += "<h4 style='color: #ff007f; border-bottom: 2px solid #ff007f; padding-bottom: 4px; margin-bottom: 8px; font-size: 15px;'>1. Pizza Crust Bases</h4>"
+    html += "<table style='width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;'>"
+    html += "  <tr style='background-color: #ffeff5; text-align: left;'>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8;'>ID</th>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8;'>Name</th>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8; text-align: right;'>Price</th>"
+    html += "  </tr>"
+    for base in BASES:
+        html += f"  <tr style='border-bottom: 1px solid #f3f4f6;'>"
+        html += f"    <td style='padding: 8px; font-weight: bold;'>{base['id']}</td>"
+        html += f"    <td style='padding: 8px;'>{base['name']}</td>"
+        html += f"    <td style='padding: 8px; text-align: right; font-weight: bold; color: #ff007f;'>Rs. {int(base['price'])}</td>"
+        html += "  </tr>"
+    html += "</table>"
+    
+    # 2. Classic Pizzas table
+    html += "<h4 style='color: #ff007f; border-bottom: 2px solid #ff007f; padding-bottom: 4px; margin-bottom: 8px; font-size: 15px;'>2. Classic Pizzas</h4>"
+    html += "<table style='width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;'>"
+    html += "  <tr style='background-color: #ffeff5; text-align: left;'>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8;'>ID</th>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8;'>Name</th>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8; text-align: right;'>Price</th>"
+    html += "  </tr>"
+    for pizza in PIZZAS:
+        html += f"  <tr style='border-bottom: 1px solid #f3f4f6;'>"
+        html += f"    <td style='padding: 8px; font-weight: bold;'>{pizza['id']}</td>"
+        html += f"    <td style='padding: 8px;'>{pizza['name']}</td>"
+        html += f"    <td style='padding: 8px; text-align: right; font-weight: bold; color: #ff007f;'>Rs. {int(pizza['price'])}</td>"
+        html += "  </tr>"
+    html += "</table>"
+    
+    # 3. Add-on toppings table
+    html += "<h4 style='color: #ff007f; border-bottom: 2px solid #ff007f; padding-bottom: 4px; margin-bottom: 8px; font-size: 15px;'>3. Fresh Add-on Toppings</h4>"
+    html += "<table style='width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;'>"
+    html += "  <tr style='background-color: #ffeff5; text-align: left;'>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8;'>ID</th>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8;'>Name</th>"
+    html += "    <th style='padding: 8px; border-bottom: 1px solid #fbcfe8; text-align: right;'>Price</th>"
+    html += "  </tr>"
+    for topping in TOPPINGS:
+        html += f"  <tr style='border-bottom: 1px solid #f3f4f6;'>"
+        html += f"    <td style='padding: 8px; font-weight: bold;'>{topping['id']}</td>"
+        html += f"    <td style='padding: 8px;'>{topping['name']}</td>"
+        html += f"    <td style='padding: 8px; text-align: right; font-weight: bold; color: #ff007f;'>Rs. {int(topping['price'])}</td>"
+        html += "  </tr>"
+    html += "</table>"
+    
+    html += "</div>"
+    return html
 
-MENU_MARKDOWN = generate_menu_markdown()
+MENU_HTML = generate_menu_html()
 
 # -------------------------------------------------------------
 # ORDER LOG WRITER
@@ -346,7 +383,15 @@ def process_order(name, phone, qty_raw, pay_mode, *pizza_details):
     </div>
     """
     
-    return "", invoice_html
+    success_html = (
+        "<div style='background-color: #ecfdf5; border: 1px dashed #10b981; "
+        "border-radius: 8px; padding: 16px; color: #065f46; font-family: sans-serif; "
+        "font-size: 13px; margin-bottom: 12px;'>"
+        "<strong>✓ Success!</strong> Your order has been placed. Please see the generated "
+        "receipt in the <strong>Invoice Bill Receipt</strong> tab on the right."
+        "</div>"
+    )
+    return success_html, invoice_html
 
 # -------------------------------------------------------------
 # GRADIO USER INTERFACE LAYOUT
@@ -356,8 +401,8 @@ with gr.Blocks() as demo:
     gr.Markdown("### Stage 2 MVP — Pricing Validation & Log Persistence Engine")
     
     with gr.Row():
-        # LEFT COLUMN: INPUT CONTROLS
-        with gr.Column(scale=1):
+        # LEFT COLUMN: INPUT CONTROLS (Scale 4 for wider table-style inputs)
+        with gr.Column(scale=4):
             gr.Markdown("### 📝 Enter Order Details")
             c_name = gr.Textbox(label="Customer Name", placeholder="e.g. Rajan Sharma")
             c_phone = gr.Textbox(label="10-Digit Phone Number", placeholder="e.g. 9876543210")
@@ -374,15 +419,13 @@ with gr.Blocks() as demo:
             row_components = []
             pizza_inputs = []
 
-            # Dynamically build 10 pizza slot rows, mapping visibility initially to row 1 only
+            # Dynamically build 10 pizza slot rows as simple side-by-side rows (like a table layout)
             for i in range(1, 11):
                 is_visible = (i == 1)
-                with gr.Group(visible=is_visible) as r_grp:
-                    gr.Markdown(f"#### 🍕 Pizza #{i}")
-                    with gr.Row():
-                        b_sel = gr.Dropdown(choices=BASE_CHOICES, label="Crust Base")
-                        p_sel = gr.Dropdown(choices=PIZZA_CHOICES, label="Pizza Choice")
-                        t_sel = gr.Dropdown(choices=TOPPING_CHOICES, label="Add-on Topping")
+                with gr.Row(visible=is_visible) as r_grp:
+                    b_sel = gr.Dropdown(choices=BASE_CHOICES, label=f"#{i} Crust")
+                    p_sel = gr.Dropdown(choices=PIZZA_CHOICES, label=f"#{i} Pizza")
+                    t_sel = gr.Dropdown(choices=TOPPING_CHOICES, label=f"#{i} Topping")
                     row_components.append(r_grp)
                     pizza_inputs.extend([b_sel, p_sel, t_sel])
             
@@ -394,10 +437,10 @@ with gr.Blocks() as demo:
             
             btn_order = gr.Button("Confirm and Place Order", variant="primary")
             
-        # RIGHT COLUMN: MENU VIEW & RECEIPT
-        with gr.Column(scale=1):
+        # RIGHT COLUMN: MENU VIEW & RECEIPT (Scale 2)
+        with gr.Column(scale=2):
             with gr.Tab("Active Digital Menus"):
-                gr.Markdown(MENU_MARKDOWN)
+                gr.HTML(MENU_HTML)
                 
             with gr.Tab("Invoice Bill Receipt"):
                 out_receipt = gr.HTML(value="<div style='text-align: center; color: gray; margin-top: 40px;'>Receipt will be generated here upon order validation.</div>")
@@ -405,7 +448,7 @@ with gr.Blocks() as demo:
     # Slider Quantity Change visibility mapping
     def update_rows_visibility(qty):
         qty_val = int(qty)
-        return [gr.Group(visible=(i < qty_val)) for i in range(10)]
+        return [gr.Row(visible=(i < qty_val)) for i in range(10)]
 
     c_qty.change(
         fn=update_rows_visibility,

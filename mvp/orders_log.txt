@@ -18,3 +18,19 @@
 
 2026-06-26T11:00:53 | rajan sharma | 9876765623 | Pizza1:Base:Thin Crust@149/Pizza:Margherita@299/Topping:Black Olives@49 | Pizza2:Base:Thin Crust@149/Pizza:Pepperoni Classic@369/Topping:Button Mushrooms@49 | Pizza3:Base:Cheese Burst@229/Pizza:Farm House@319/Topping:Peri-Peri Drizzle@59 | Qty:3 | Subtotal:1671.00 | Discount:0.00 | GST:300.78 | Total:1971.78 | Pay:Cash
 
+2026-06-26T11:03:45 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:1 | Subtotal:677.00 | Discount:0.00 | GST:121.86 | Total:798.86 | Pay:Cash
+
+2026-06-26T11:03:45 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza2:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza3:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza4:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza5:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:5 | Subtotal:3385.00 | Discount:338.50 | GST:548.37 | Total:3594.87 | Pay:Cash
+
+2026-06-26T11:03:58 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:1 | Subtotal:677.00 | Discount:0.00 | GST:121.86 | Total:798.86 | Pay:Cash
+
+2026-06-26T11:03:58 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza2:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza3:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza4:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza5:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:5 | Subtotal:3385.00 | Discount:338.50 | GST:548.37 | Total:3594.87 | Pay:Cash
+
+2026-06-26T11:05:12 | abcd efgh | 7676767676 | Pizza1:Base:Thin Crust@149/Pizza:Margherita@299/Topping:Black Olives@49 | Pizza2:Base:Thin Crust@149/Pizza:Margherita@299/Topping:Black Olives@49 | Qty:2 | Subtotal:994.00 | Discount:0.00 | GST:178.92 | Total:1172.92 | Pay:Cash
+
+2026-06-26T11:06:43 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:1 | Subtotal:677.00 | Discount:0.00 | GST:121.86 | Total:798.86 | Pay:Cash
+
+2026-06-26T11:06:43 | Rajan Sharma | 9876543210 | Pizza1:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza2:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza3:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza4:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Pizza5:Base:Cheese Burst@229/Pizza:BBQ Chicken@379/Topping:Extra Cheese@69 | Qty:5 | Subtotal:3385.00 | Discount:338.50 | GST:548.37 | Total:3594.87 | Pay:Cash
+
+2026-06-26T11:08:34 | abcd efgh | 6565656565 | Pizza1:Base:Thin Crust@149/Pizza:Margherita@299/Topping:Black Olives@49 | Pizza2:Base:Whole Wheat@159/Pizza:Chicago Deep Dish@349/Topping:Black Olives@49 | Pizza3:Base:Thick Crust@179/Pizza:Margherita@299/Topping:Extra Cheese@69 | Pizza4:Base:Multigrain@169/Pizza:Paneer Tikka@349/Topping:Peri-Peri Drizzle@59 | Qty:4 | Subtotal:2178.00 | Discount:0.00 | GST:392.04 | Total:2570.04 | Pay:Cash
+
