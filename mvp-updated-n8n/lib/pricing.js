@@ -46,27 +46,61 @@ export function validateSelection(item, label) {
   return null;
 }
 
+// Topping is OPTIONAL — no validator needed; null is allowed in a cart line.
+
+// ---- Delivery address ----
+export function validatePincode(raw) {
+  const p = String(raw ?? "").trim();
+  if (!p) return "Enter your 6-digit pincode.";
+  if (!/^[1-9][0-9]{5}$/.test(p)) return "Enter a valid 6-digit Indian pincode.";
+  return null;
+}
+
+export function validateAddress(a) {
+  if (!a) return "Enter your delivery address.";
+  if (!a.building || a.building.trim().length < 2) return "Enter your flat / building / house no.";
+  if (!a.area || a.area.trim().length < 2) return "Enter your area / locality.";
+  return validatePincode(a.pincode);
+}
+
+export function formatAddress(a) {
+  if (!a) return "";
+  return [a.building, a.area, a.landmark, a.pincode].map((x) => (x || "").trim()).filter(Boolean).join(", ");
+}
+
 // ---- Money helpers ----
 export const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 export const formatINR = (n) =>
   "₹" + round2(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 // ---- The bill engine ----
-// selection = { base, pizza, topping }  (each = {name, price, item_code, category})
-export function computeBill(selection, quantity) {
-  const { base, pizza, topping } = selection;
-  const unitPrice = (base?.price || 0) + (pizza?.price || 0) + (topping?.price || 0);
-  const qty = parseInt(quantity, 10) || 0;
-  const subtotal = round2(unitPrice * qty);
-
-  const discountApplies = qty >= RULES.DISCOUNT_THRESHOLD;
+// ---- Cart engine (canonical) ----
+// items = [{ base, pizza, topping (optional/null), quantity }]
+export function computeCart(items) {
+  const lines = (items || []).map((it) => {
+    const unitPrice = (it.base?.price || 0) + (it.pizza?.price || 0) + (it.topping?.price || 0);
+    const qty = parseInt(it.quantity, 10) || 0;
+    return { ...it, unitPrice, qty, lineSubtotal: round2(unitPrice * qty) };
+  });
+  const totalPizzas = lines.reduce((s, l) => s + l.qty, 0);
+  const subtotal = round2(lines.reduce((s, l) => s + l.lineSubtotal, 0));
+  const discountApplies = totalPizzas >= RULES.DISCOUNT_THRESHOLD;
   const discount = discountApplies ? round2(subtotal * RULES.DISCOUNT_RATE) : 0;
-
   const postDiscount = round2(subtotal - discount);
   const gst = round2(postDiscount * RULES.GST_RATE); // GST on post-discount total
   const total = round2(postDiscount + gst);
+  return { lines, totalPizzas, subtotal, discountApplies, discount, postDiscount, gst, total };
+}
 
-  return { unitPrice, qty, subtotal, discountApplies, discount, postDiscount, gst, total };
+// Single combo × quantity — thin wrapper over the cart engine (keeps old API + tests).
+export function computeBill(selection, quantity) {
+  const c = computeCart([{ ...selection, quantity }]);
+  const line = c.lines[0] || { unitPrice: 0, qty: 0 };
+  return {
+    unitPrice: line.unitPrice, qty: line.qty, subtotal: c.subtotal,
+    discountApplies: c.discountApplies, discount: c.discount,
+    postDiscount: c.postDiscount, gst: c.gst, total: c.total,
+  };
 }
 
 // ---- Per-mode payment confirmation (fixes the generic-message gap) ----

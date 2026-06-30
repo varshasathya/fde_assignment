@@ -1,93 +1,88 @@
-# SliceMatic — Full-Stack Ordering System
+# SliceMatic — Full-Stack Ordering System (V3)
 
-A production-ready rebuild of the PizzaFlow MVP for **Stage 3**: a Next.js storefront on Vercel, Supabase Postgres for menu + orders, a Supabase-Auth admin dashboard, and an OpenRouter-powered recommendation engine. All Stage 2 business rules (validation, 10% discount at 5+, 18% GST on the post-discount total, three payment modes, order persistence) are preserved in one shared module.
+A complete pizza ordering + kitchen-management system for SliceMatic, built with Next.js.
+Customers order on a clean storefront; staff manage every order through its lifecycle on a live
+dashboard; and WhatsApp messages fire automatically — on order, and again when it goes out for delivery.
 
-It runs **out of the box with zero config** in an offline demo mode (menu falls back to local data, orders aren't persisted). Add Supabase + OpenRouter keys to go live.
-
----
-
-## Tech stack
-
-| Layer | Choice |
-|---|---|
-| Frontend | Next.js 14 (App Router), React 18, Tailwind CSS |
-| Database | Supabase Postgres — `menu_items`, `orders`, `order_items` |
-| Auth | Supabase Auth (email/password) for the admin dashboard |
-| AI | OpenRouter chat completions, called from a server route |
-| Hosting | Vercel |
+**No external database or account needed.** Orders are stored in a simple local file
+(`data/orders.json`). The data layer is isolated in `lib/store.js`, so it can later be swapped for
+Supabase/Postgres without touching the UI.
 
 ---
 
-## Quick start (local)
+## What it does
+
+**Customer storefront (`/`)**
+- Name, phone, and full delivery address (with optional "use my location" pin)
+- Build a multi-pizza cart — crust + pizza + optional topping + quantity, add as many as you like
+- Live thermal-receipt bill: 10% discount on 5+ pizzas, 18% GST on the post-discount total
+- Cash / Card / UPI, with a simulated "authorising payment" step for Card & UPI
+- AI recommendation (optional, via OpenRouter) based on past orders
+
+**Kitchen dashboard (`/admin`)**
+- Simple password sign-in (no external auth)
+- Live order feed (refreshes every 5s) with status badges
+- Move each order through its lifecycle: **Placed → Accepted → Out for delivery → Delivered**
+- Revenue, order count, active orders, top pizza, busiest hour; CSV export; date/status/payment filters
+
+**WhatsApp automation (via n8n)**
+- On **order placed** → confirmation to the customer + full ticket (with address) to staff
+- On **out for delivery** → "your order is on its way" message to the customer
+
+---
+
+## Quick start (local — this is all you need)
 
 ```bash
 npm install
-npm run dev          # http://localhost:3000
-npm run test:pricing # verifies the bill engine against the reference numbers
+npm run dev            # http://localhost:3000
+npm run test:pricing   # verifies the bill engine (24 checks, matches the ₹3,594.87 reference)
 ```
 
-Without any `.env.local`, the app runs in offline demo mode. To go live, copy `.env.local.example` to `.env.local` and fill it in.
+Storefront: `http://localhost:3000` · Dashboard: `http://localhost:3000/admin` (password `slicematic123`).
+It works fully offline — orders save to `data/orders.json` and appear on the dashboard immediately.
 
-## Supabase setup
+## Environment variables (all optional)
 
-1. Create a project at supabase.com.
-2. **SQL Editor → New query →** paste `supabase/schema.sql` → **Run.** This creates the three tables, seeds the menu, and sets row-level security.
-3. **Authentication → Users → Add user:** create your admin email + password (this logs into `/admin`).
-4. **Project Settings → API:** copy the Project URL, the `anon` key, and the `service_role` key into `.env.local`.
+Copy `.env.local.example` → `.env.local`. Everything has a sensible default, so set only what you need.
 
-## Environment variables
-
-| Variable | Where | Purpose |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | browser | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | browser | Public anon key (menu read, order insert, admin auth) |
-| `SUPABASE_SERVICE_ROLE_KEY` | server only | Lets `/api/recommend` read order history |
-| `OPENROUTER_API_KEY` | server only | AI recommendations (omit → friendly fallback) |
-| `OPENROUTER_MODEL` | server only | Defaults to `meta-llama/llama-3.1-8b-instruct` |
-
-## Deploy to Vercel
-
-1. Push this folder to a GitHub repo.
-2. vercel.com → **New Project →** import the repo (Next.js is auto-detected).
-3. Add the five environment variables above in **Settings → Environment Variables.**
-4. **Deploy.** You get a public URL that works on demo day.
-
----
+| Variable | Purpose |
+|---|---|
+| `N8N_WEBHOOK_URL` | New-order WhatsApp alert (customer + staff). Import `n8n/slicematic_whatsapp_workflow.json`. |
+| `N8N_DELIVERY_WEBHOOK_URL` | "Out for delivery" alert to the customer. Import `n8n/slicematic_delivery_workflow.json`. |
+| `ADMIN_PASSWORD` | Dashboard password (default `slicematic123`). |
+| `OPENROUTER_API_KEY` | AI recommendation (omit → friendly fallback). |
+| `OPENROUTER_MODEL` | Defaults to `meta-llama/llama-3.1-8b-instruct`. |
 
 ## Architecture
 
 ```
-Browser ──> Next.js (Vercel)
-              ├─ /            ordering UI  ── Supabase (anon): read menu, insert order
-              ├─ /admin       dashboard    ── Supabase Auth + read orders, CSV export
-              └─ /api/recommend (server)   ── Supabase (service role) + OpenRouter LLM
-
-lib/pricing.js   ← single source of truth: validation, discount, GST, payment text
+Customer (/)  ─POST /api/orders─►  lib/store.js (data/orders.json)
+                                        │  └─► n8n new-order webhook ─► WhatsApp (customer + staff)
+Staff (/admin) ─GET /api/orders──►  live feed
+               ─POST /api/orders/status─► status change
+                                        └─(Out for delivery)─► n8n delivery webhook ─► WhatsApp (customer)
 ```
 
-Why a shared `lib/pricing.js`: the discount threshold, GST rate, and validation live in **one** place, imported by the UI and the test. Changing the discount threshold from 5 to 3 for the live demo is a one-line edit (`RULES.DISCOUNT_THRESHOLD`) that updates the UI hint, the bill, and the receipt together.
+## Order lifecycle
 
-## AI feature — Recommendation engine (Option A)
+`PLACED` → (Accept) → `ACCEPTED` → (Out for delivery → messages customer) → `OUT_FOR_DELIVERY` → (Mark delivered) → `DELIVERED`
 
-After the customer enters name + phone, the app calls `/api/recommend`, which looks up their last five orders in Supabase and asks an LLM for one personalised crust + pizza + topping suggestion, shown above the menu. New customers get a crowd-pleaser. The OpenRouter key stays server-side.
+## Swapping the file store for a real database later
 
-**Model:** `meta-llama/llama-3.1-8b-instruct` (configurable) — fast and cheap for a one-sentence suggestion.
+Everything DB-related lives in `lib/store.js` (`createOrder`, `listOrders`, `getOrder`,
+`getOrdersByPhone`, `updateStatus`). To move to Supabase/Postgres, reimplement those five functions
+against your DB — no API route or UI change needed.
 
-**System prompt** (in `app/api/recommend/route.js`):
+## n8n setup
 
-> You are SliceMatic's friendly in-app pizza concierge for an outlet in New Ashok Nagar, Delhi. Recommend exactly ONE combination of crust + pizza + one topping from the menu, in ONE warm sentence (max 30 words). If the customer has order history, build on what they liked before. If they are new, suggest a crowd-pleaser. Never invent items that are not on the menu. Do not mention prices. Output only the sentence, no preamble.
+1. Import `n8n/slicematic_whatsapp_workflow.json` (new-order) and `n8n/slicematic_delivery_workflow.json` (delivery).
+2. In each, set the WhatsApp credential / token + the owner/staff number.
+3. Activate both, copy their **production** webhook URLs into `.env.local`.
 
----
+> WhatsApp note: a plain-text message only delivers if the recipient messaged your business number in the last 24h; for cold customer messages use an approved template. For the demo, send a "hi" from your test phone first.
 
-## How this maps to the Stage 3 rubric
+## AI feature — recommendation engine (Option A)
 
-- **Vercel frontend, full flow, responsive** — `/` covers intake → menu → bill → payment → confirmation, mobile-first.
-- **Supabase, 3+ tables, menu from DB** — `menu_items`, `orders`, `order_items`; menu loaded at runtime.
-- **Auth + admin** — Supabase Auth login; orders with date + payment filters; revenue, top pizza, busiest hour; CSV export.
-- **Stage 2 logic preserved** — `lib/pricing.js`, verified by `npm run test:pricing` (matches the ₹3,594.87 reference bill).
-- **AI feature, system prompt documented** — recommendation engine above.
-
-## Gaps from the Gradio MVP that this fixes
-
-- **Real validation messages:** quantity and inputs accept free text, so out-of-range / non-integer / bad-phone inputs surface the exact rejection message (the slider-based MVP couldn't trigger these).
-- **Per-mode payment confirmation:** Cash / Card / UPI each show a distinct, specific message.
+After name + phone, `/api/recommend` looks up the customer's past orders (from the file store) and asks
+an LLM via OpenRouter for one personalised suggestion. System prompt is documented in `app/api/recommend/route.js`.

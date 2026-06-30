@@ -42,3 +42,21 @@ ok(validateQuantity("3") === null, "quantity 3 accepted");
 ok(paymentConfirmation("Cash", 100) !== paymentConfirmation("UPI", 100), "payment messages are mode-specific");
 
 console.log(`\nAll ${passed} pricing/validation checks passed.`);
+
+// ---- Cart engine ----
+import { computeCart } from "./pricing.js";
+const A = { base:{name:"Cheese Burst",price:229}, pizza:{name:"BBQ Chicken",price:379}, topping:{name:"Extra Cheese",price:69}, quantity:5 };
+const cart1 = computeCart([A]);
+ok(cart1.total === 3594.87, "cart: single line of 5 matches reference total ₹3594.87");
+
+// two different pizzas, one with no topping; 3 + 2 = 5 pizzas -> discount kicks in
+const B = { base:{name:"Thin Crust",price:149}, pizza:{name:"Margherita",price:299}, topping:null, quantity:2 };
+const C = { base:{name:"Cheese Burst",price:229}, pizza:{name:"BBQ Chicken",price:379}, topping:{name:"Extra Cheese",price:69}, quantity:3 };
+const cart2 = computeCart([B, C]);
+ok(cart2.totalPizzas === 5, "cart: two lines total 5 pizzas");
+ok(cart2.discountApplies === true, "cart: 5 total pizzas triggers discount across lines");
+ok(cart2.lines[0].topping === null, "cart: a line with no topping is allowed");
+// subtotal = 2*(149+299) + 3*(229+379+69) = 896 + 2031 = 2927
+ok(cart2.subtotal === 2927, "cart: mixed-basket subtotal = ₹2927");
+
+console.log(`\nAll ${passed} checks passed (incl. cart).`);
