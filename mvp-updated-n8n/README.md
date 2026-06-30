@@ -314,7 +314,7 @@ Returns one personalized pizza recommendation.
 
 # 👨‍💻 Developed By
 
-**Ratnesh Singhaniya**
+**Team-2**
 
 Built as a full-stack assignment demonstrating:
 
