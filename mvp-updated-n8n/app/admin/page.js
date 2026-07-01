@@ -20,6 +20,7 @@ export default function AdminPage() {
   const [mode, setMode] = useState("All");
   const [statusF, setStatusF] = useState("All");
   const [busy, setBusy] = useState(null);
+  const [funnelMetrics, setFunnelMetrics] = useState(null);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -29,12 +30,31 @@ export default function AdminPage() {
     } catch {}
   }, []);
 
+  const fetchFunnelMetrics = useCallback(async () => {
+    try {
+      const r = await fetch("/api/funnel", {
+        headers: { "Authorization": `Bearer ${password}` },
+        cache: "no-store",
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.success) setFunnelMetrics(d.metrics);
+      }
+    } catch (e) {
+      console.error("Fetch funnel metrics error:", e);
+    }
+  }, [password]);
+
   useEffect(() => {
     if (!authed) return;
     fetchOrders();
-    const t = setInterval(fetchOrders, 5000); // live refresh
+    fetchFunnelMetrics();
+    const t = setInterval(() => {
+      fetchOrders();
+      fetchFunnelMetrics();
+    }, 5000); // live refresh
     return () => clearInterval(t);
-  }, [authed, fetchOrders]);
+  }, [authed, fetchOrders, fetchFunnelMetrics]);
 
   async function signIn(e) {
     e.preventDefault();
@@ -82,7 +102,7 @@ export default function AdminPage() {
     const active = filtered.filter((o) => o.status !== "DELIVERED").length;
     return {
       revenue, count: filtered.length, active,
-      top: top ? `${top[0]} (${top[1]})` : "—",
+      top: top ? `${top[0]} (qty ${top[1]})` : "—",
       busiest: busy ? `${String(busy[0]).padStart(2, "0")}:00` : "—",
     };
   }, [filtered]);
@@ -100,7 +120,7 @@ export default function AdminPage() {
   if (!authed) {
     return (
       <Shell>
-        <form onSubmit={signIn} className="bg-panel border border-line rounded-2xl p-6 max-w-sm shadow-card">
+        <form onSubmit={signIn} className="bg-panel border border-line rounded-2xl p-6 max-w-sm shadow-card" style={{ margin: "40px auto 0" }}>
           <h2 className="font-display font-bold text-xl mb-1">Staff sign in</h2>
           <p className="text-[12px] text-muted mb-3">Default password: <code>slicematic123</code> (set <code>ADMIN_PASSWORD</code> to change).</p>
           <input type="password" className="w-full mb-3 rounded-xl border border-line px-3 py-2.5 text-[14px] outline-none focus:border-brand"
@@ -126,10 +146,130 @@ export default function AdminPage() {
         {[["Revenue", formatINR(kpis.revenue)], ["Orders", kpis.count], ["Active now", kpis.active], ["Top pizza", kpis.top], ["Busiest hour", kpis.busiest]].map(([k, v]) => (
           <div key={k} className="bg-panel border border-line rounded-2xl p-4 shadow-card">
             <div className="text-[11px] uppercase tracking-wide text-muted">{k}</div>
-            <div className="text-[18px] font-bold mt-1 leading-tight">{v}</div>
+            <div className="text-[16px] font-bold mt-1 leading-tight">{v}</div>
           </div>
         ))}
       </div>
+
+      {/* Funnel State Analytics */}
+      {funnelMetrics && (
+        <div className="bg-panel border border-line rounded-2xl p-5 shadow-card mb-6">
+          <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-2">
+            📊 Funnel Conversion Analytics
+            <span className="text-[10px] font-bold uppercase tracking-wider text-brand bg-brand/5 border border-brand/20 px-2.5 py-0.5 rounded-full">
+              Live State Management (TOFU/MOFU/BOFU)
+            </span>
+          </h2>
+          
+          <div className="grid md:grid-cols-[1.4fr_1fr] gap-6">
+            {/* The Pipeline (TOFU -> MOFU -> BOFU) */}
+            <div className="space-y-4">
+              <div className="text-[12px] font-bold text-ink/75 uppercase tracking-wide">
+                User Progression Pipeline
+              </div>
+              
+              {/* Step 1: TOFU Sessions */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span>1. TOFU: Sessions Started</span>
+                  <span className="font-mono">{funnelMetrics.totalSessions} sessions</span>
+                </div>
+                <div className="w-full bg-line rounded-full h-2 overflow-hidden">
+                  <div className="bg-ink h-full rounded-full transition-all duration-500" style={{ width: "100%" }}></div>
+                </div>
+              </div>
+
+              {/* Step 2: MOFU Reached Builder */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span>2. MOFU: Reached Pizza Builder (Intake Completed)</span>
+                  <span className="font-mono">
+                    {funnelMetrics.reachedBuild} ({funnelMetrics.totalSessions > 0 ? Math.round((funnelMetrics.reachedBuild / funnelMetrics.totalSessions) * 100) : 0}%)
+                  </span>
+                </div>
+                <div className="w-full bg-line rounded-full h-2 overflow-hidden">
+                  <div className="bg-brand h-full rounded-full transition-all duration-500" style={{ width: `${funnelMetrics.totalSessions > 0 ? (funnelMetrics.reachedBuild / funnelMetrics.totalSessions) * 100 : 0}%` }}></div>
+                </div>
+              </div>
+
+              {/* Step 3: MOFU Reached Payment */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span>3. MOFU: Reached Payment Selection</span>
+                  <span className="font-mono">
+                    {funnelMetrics.reachedPayment} ({funnelMetrics.totalSessions > 0 ? Math.round((funnelMetrics.reachedPayment / funnelMetrics.totalSessions) * 100) : 0}%)
+                  </span>
+                </div>
+                <div className="w-full bg-line rounded-full h-2 overflow-hidden">
+                  <div className="bg-branddark h-full rounded-full transition-all duration-500" style={{ width: `${funnelMetrics.totalSessions > 0 ? (funnelMetrics.reachedPayment / funnelMetrics.totalSessions) * 100 : 0}%` }}></div>
+                </div>
+              </div>
+
+              {/* Step 4: BOFU Completed Order */}
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-1">
+                  <span>4. BOFU: Orders Completed & Saved</span>
+                  <span className="font-mono text-basil">
+                    {funnelMetrics.completedOrder} ({funnelMetrics.totalSessions > 0 ? Math.round((funnelMetrics.completedOrder / funnelMetrics.totalSessions) * 100) : 0}%)
+                  </span>
+                </div>
+                <div className="w-full bg-line rounded-full h-2 overflow-hidden">
+                  <div className="bg-basil h-full rounded-full transition-all duration-500" style={{ width: `${funnelMetrics.totalSessions > 0 ? (funnelMetrics.completedOrder / funnelMetrics.totalSessions) * 100 : 0}%` }}></div>
+                </div>
+              </div>
+            </div>
+
+            {/* AI Attach & Validation Failures */}
+            <div className="space-y-5">
+              {/* AI Recommendation stats */}
+              <div className="bg-paper border border-line rounded-xl p-4">
+                <div className="text-[12px] font-bold text-branddark uppercase tracking-wide mb-2">
+                  ✦ AI Suggestion Conversions
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-[11px] text-muted uppercase">Shown</div>
+                    <div className="text-xl font-bold font-mono">{funnelMetrics.recShownCount}</div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] text-muted uppercase">Accepted</div>
+                    <div className="text-xl font-bold font-mono text-basil">{funnelMetrics.recAcceptedCount}</div>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-line flex justify-between items-baseline">
+                  <span className="text-xs text-muted">Attach Rate:</span>
+                  <span className="text-sm font-bold text-brand font-mono font-semibold">
+                    {funnelMetrics.recShownCount > 0 ? Math.round((funnelMetrics.recAcceptedCount / funnelMetrics.recShownCount) * 100) : 0}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Validation errors breakdown */}
+              <div>
+                <div className="text-[12px] font-bold text-ink/75 uppercase tracking-wide mb-2">
+                  Intake Drop-off Friction (Errors)
+                </div>
+                {Object.keys(funnelMetrics.errorCounts).length === 0 ? (
+                  <div className="text-xs text-muted italic">No input validation errors recorded yet.</div>
+                ) : (
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
+                    {Object.entries(funnelMetrics.errorCounts)
+                      .sort((a, b) => b[1] - a[1])
+                      .map(([field, count]) => (
+                        <div key={field} className="flex justify-between items-center text-xs bg-paper border border-line rounded px-2.5 py-1">
+                          <span className="capitalize text-ink/80 font-semibold">{field} error</span>
+                          <span className="font-mono font-bold bg-line px-1.5 py-0.5 rounded text-[10px] text-muted">
+                            {count} prompt{count > 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap items-end gap-3 mb-4">
         <label className="text-[12px] text-muted">From<br /><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 rounded-lg border border-line px-2 py-1.5 text-[13px]" /></label>

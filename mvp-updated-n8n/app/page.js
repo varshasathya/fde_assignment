@@ -38,6 +38,7 @@ export default function OrderPage() {
   const [menu, setMenu] = useState(null);
   const [source, setSource] = useState("");
   const [step, setStep] = useState("details"); // details | build | authorizing | done
+  const [sessionId, setSessionId] = useState("");
 
   // customer + address
   const [name, setName] = useState("");
@@ -60,6 +61,15 @@ export default function OrderPage() {
   const [submitError, setSubmitError] = useState("");
   const [authMode, setAuthMode] = useState("");
 
+  // Initialize Session ID
+  useEffect(() => {
+    const id = typeof crypto !== "undefined" && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2) + Date.now().toString(36);
+    setSessionId(id);
+  }, []);
+
+  // Fetch Menu
   useEffect(() => { loadMenu().then(({ menu, source }) => { setMenu(menu); setSource(source); }); }, []);
 
   const nameErr = validateName(name);
@@ -67,6 +77,33 @@ export default function OrderPage() {
   const addrErr = validateAddress(address);
   const bQtyErr = validateQuantity(bQty);
   const bill = useMemo(() => computeCart(cart), [cart]);
+
+  // Log Event Helper
+  const logEvent = async (eventName, stage, metadata = {}) => {
+    if (!sessionId) return;
+    try {
+      await fetch("/api/funnel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          phone: phone || null,
+          stage,
+          eventName,
+          metadata,
+        }),
+      });
+    } catch (e) {
+      console.warn("Funnel log event failed:", e);
+    }
+  };
+
+  // Log Session Start
+  useEffect(() => {
+    if (sessionId) {
+      logEvent("SESSION_START", "TOFU");
+    }
+  }, [sessionId]);
 
   function setAddr(k, v) { setAddress((a) => ({ ...a, [k]: v })); }
 
@@ -81,8 +118,18 @@ export default function OrderPage() {
 
   async function goToBuild() {
     setTouched({ name: true, phone: true, building: true, area: true, pincode: true });
-    if (nameErr || phoneErr || addrErr) return;
+    
+    // Log validation errors if present
+    if (nameErr || phoneErr || addrErr) {
+      if (nameErr) logEvent("VALIDATION_ERROR", "TOFU", { field: "name", error: nameErr });
+      if (phoneErr) logEvent("VALIDATION_ERROR", "TOFU", { field: "phone", error: phoneErr });
+      if (addrErr) logEvent("VALIDATION_ERROR", "TOFU", { field: "address", error: addrErr });
+      return;
+    }
+
     setStep("build");
+    logEvent("INTAKE_COMPLETE", "TOFU");
+
     setRec({ loading: true, text: "", model: "" });
     try {
       const r = await fetch("/api/recommend", {
@@ -91,23 +138,75 @@ export default function OrderPage() {
       });
       const data = await r.json();
       setRec({ loading: false, text: data.recommendation || "", model: data.model || "" });
-    } catch { setRec({ loading: false, text: "", model: "" }); }
+      if (data.recommendation) {
+        logEvent("RECOMMENDATION_SHOWN", "MOFU", { model: data.model, recommendation: data.recommendation });
+      }
+    } catch {
+      setRec({ loading: false, text: "", model: "" });
+    }
   }
 
   function addToCart() {
     setSubmitError("");
     const e = validateSelection(bBase, "crust") || validateSelection(bPizza, "pizza") || bQtyErr;
-    if (e) { setSubmitError(e); return; }
+    if (e) {
+      setSubmitError(e);
+      logEvent("VALIDATION_ERROR", "MOFU", { field: "pizza_builder", error: e });
+      return;
+    }
     setCart((c) => [...c, { base: bBase, pizza: bPizza, topping: bTopping, quantity: parseInt(bQty, 10) }]);
     setBBase(null); setBPizza(null); setBTopping(null); setBQty("1");
+  }
+
+  function quickAddRecommendation() {
+    if (!rec.text || !menu) return;
+    const text = rec.text.toLowerCase();
+
+    // Map strings to menu items
+    const matchedBase = menu.base.find(b => text.includes(b.name.toLowerCase()));
+    const matchedPizza = menu.pizza.find(p => text.includes(p.name.toLowerCase()));
+    const matchedTopping = menu.topping.find(t => text.includes(t.name.toLowerCase())) || null;
+
+    if (matchedBase && matchedPizza) {
+      setCart((c) => [...c, { base: matchedBase, pizza: matchedPizza, topping: matchedTopping, quantity: 1 }]);
+      logEvent("RECOMMENDATION_ACCEPTED", "MOFU", {
+        base: matchedBase.name,
+        pizza: matchedPizza.name,
+        topping: matchedTopping?.name || null,
+        method: "automatic"
+      });
+    } else {
+      // Intelligent default matching if AI phrase is complex
+      const fallbackBase = menu.base.find(b => b.name === "Cheese Burst" || b.name === "Thick Crust");
+      const fallbackPizza = menu.pizza.find(p => p.name === "BBQ Chicken" || p.name === "Farm House");
+      const fallbackTopping = menu.topping.find(t => t.name === "Extra Cheese" || t.name === "Caramelised Onions") || null;
+      
+      setCart((c) => [...c, { base: fallbackBase, pizza: fallbackPizza, topping: fallbackTopping, quantity: 1 }]);
+      logEvent("RECOMMENDATION_ACCEPTED", "MOFU", {
+        base: fallbackBase.name,
+        pizza: fallbackPizza.name,
+        topping: fallbackTopping?.name || null,
+        method: "fallback"
+      });
+    }
   }
 
   function removeLine(i) { setCart((c) => c.filter((_, idx) => idx !== i)); }
 
   async function placeOrder() {
     setSubmitError("");
-    if (cart.length === 0) { setSubmitError("Add at least one pizza to your order."); return; }
-    if (!payment) { setSubmitError("Choose a payment mode."); return; }
+    if (cart.length === 0) {
+      setSubmitError("Add at least one pizza to your order.");
+      logEvent("VALIDATION_ERROR", "MOFU", { field: "cart", error: "empty_cart" });
+      return;
+    }
+    if (!payment) {
+      setSubmitError("Choose a payment mode.");
+      logEvent("VALIDATION_ERROR", "MOFU", { field: "payment", error: "missing_payment" });
+      return;
+    }
+
+    logEvent("PAYMENT_SELECTED", "MOFU", { payment_mode: payment });
 
     const finalBill = computeCart(cart);
 
@@ -141,9 +240,12 @@ export default function OrderPage() {
       });
       const data = await res.json();
       id = data.id; persisted = !!data.persisted;
-    } catch { /* keep checkout resilient */ }
+    } catch (e) {
+      console.error("Order submit failed:", e);
+    }
 
     setConfirm({ id, persisted, bill: finalBill, timestamp, address: fullAddress });
+    logEvent("ORDER_COMPLETED", "BOFU", { orderId: id, total: finalBill.total });
     setStep("done");
   }
 
@@ -152,6 +254,12 @@ export default function OrderPage() {
     setGeo(null); setGeoMsg(""); setTouched({}); setCart([]); setBBase(null); setBPizza(null);
     setBTopping(null); setBQty("1"); setPayment(""); setRec({ loading: false, text: "", model: "" });
     setConfirm(null); setSubmitError(""); setAuthMode("");
+    
+    // Regenerate session ID for next customer flow
+    const id = typeof crypto !== "undefined" && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2) + Date.now().toString(36);
+    setSessionId(id);
   }
 
   const steps = ["Details", "Build", "Pay"];
@@ -236,6 +344,12 @@ export default function OrderPage() {
                     <span>✦ Picked for you</span>{rec.model && <span className="text-muted font-normal normal-case">· {rec.model}</span>}
                   </div>
                   <p className="text-[14px] text-ink/90">{rec.loading ? "Looking at what regulars near you love…" : rec.text}</p>
+                  {!rec.loading && rec.text && (
+                    <button type="button" onClick={quickAddRecommendation}
+                      className="mt-2 inline-flex items-center gap-1 text-[12px] bg-brand hover:bg-branddark text-white font-semibold px-3 py-1.5 rounded-xl transition shadow-card">
+                      ⚡ Quick Add Recommendation
+                    </button>
+                  )}
                 </div>
               )}
 
